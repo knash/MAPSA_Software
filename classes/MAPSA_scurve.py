@@ -1,8 +1,10 @@
 #To be used for special scurve functions
 
-from MPA import *
-from MPA_daq import *
 from MAPSA_functions import *
+from MPA_config import *
+from MPA_daq import *
+from MPA_scurve import *
+from MPA_testbeam import *
 class MPA_scurve:
 
 	def __init__(self, hw, nmpa, xmlfile):
