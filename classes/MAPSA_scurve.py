@@ -4,7 +4,7 @@
 from MPA import *
 from MPA_daq import *
 from MAPSA_functions import *
-class MPA_scurve:
+class MAPSA_scurve:
 
 	def __init__(self, hw, nmpa, xmlfile):
 		self._hw     = hw

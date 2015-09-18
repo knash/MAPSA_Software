@@ -3,7 +3,7 @@
 from MAPSA_functions import *
 from MPA_config import *
 from MPA_daq import *
-from MPA_scurve import *
+from MAPSA_scurve import *
 from MPA_testbeam import *
 class MAPSA_testbeam:
 

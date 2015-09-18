@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<connections>
+	<connection id="localhost" uri="ipbusudp-2.0://127.000.000.001:50001" address_table="file://test_address_table_v1.xml" />
+	<connection id="board0" uri="ipbusudp-2.0://192.168.000.175:50001" address_table="file://test_address_table_v1.xml" />
+</connections>

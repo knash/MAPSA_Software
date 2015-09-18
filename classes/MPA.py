@@ -1,6 +1,5 @@
 from MPA_config import *
 from MPA_daq import *
-from MPA_scurve import *
 from MPA_testbeam import *
 class MPA:
 	def __init__(self, hw, nmpa):
@@ -12,8 +11,8 @@ class MPA:
 	def config(self, xmlfile):
 		self.xmlfile = xmlfile
 		return MPA_config(self._hw, self._nmpa, xmlfile = self.xmlfile  )
-	def scurve(self):
-		return MPA_scurve(self._hw, self._nmpa ,  xmlfile = self.xmlfile)
+	#def scurve(self):
+	#	return MAPSA_scurve(self._hw, self._nmpa ,  xmlfile = self.xmlfile)
 	def testbeam(self):
 		return MPA_testbeam(self._hw, self._nmpa )
 

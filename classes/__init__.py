@@ -4,5 +4,7 @@ from MAPSA_daq import *
 from MPA import *
 from MPA_config import *
 from MPA_daq import *
-from MPA_scurve import *
+from MAPSA_scurve import *
 from MPA_testbeam import *
+from MAPSA_functions import *
+from uasic import *

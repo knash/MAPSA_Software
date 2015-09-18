@@ -31,7 +31,6 @@ class MAPSA:
 			time.sleep(0.005)
 			read = self._Utility.getNode('MPA_settings_read').getNode(supply+"_enable").read()
 			self._hw.dispatch()
-			print read
 			count = count + 1
 			if count > 100:
 				print "Idle"
