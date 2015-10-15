@@ -25,55 +25,38 @@ class MPA_daq:
 		self._buffers  = self._Control.getNode("Sequencer").getNode("buffers_index")
 		self._data_continuous  = self._Control.getNode("Sequencer").getNode("datataking_continuous")
 
+
+
 		self._memory  = self._Readout.getNode("Memory")
 		self._counter  = self._Readout.getNode("Counter")
+		self._busyread  = self._Readout.getNode("busy")
+
+		self._readmode  = self._Readout.getNode("memory_readout")
+		self._readbuff  = self._Readout.getNode("buffer_num")
 
 
-	def _wait(self):
-		busy = self._busy.read()
-		self._hw.dispatch()
-		#print "Waiting for readout"
-		#count = 0
-		#while not busy:
-		#	time.sleep(0.005)
-		#	busy = self._busy.read()
-		 #       self._hw.dispatch()
-		#	count = count + 1
-		#	if count > 100:
-		#		print "Idle"
-		#		return 0
-		
-		#print "Reading out"
-		count = 0
-		while busy:
-			time.sleep(0.005)
-			busy = self._busy.read()
-		        self._hw.dispatch()
-			count = count + 1
-			if count > 100:
-				print "Idle"
-				return 0
-		#print "Finished"
-                return 1
-			
 
-	def read_raw(self,buffer_num=1):
-		memory_data = self._memory.getNode("MPA"+str(self._nmpa)).getNode("buffer_"+str(buffer_num)).readBlock(216)
+
+	def read_raw(self,buffer_num):
+
 		counter_data  = self._counter.getNode("MPA"+str(self._nmpa)).readBlock(25)
+		memory_data = self._memory.getNode("MPA"+str(self._nmpa)).getNode("buffer_"+str(buffer_num)).readBlock(216)
+
 		self._hw.dispatch()
-		time.sleep(0.001)
+
 		return [memory_data,counter_data]
 
-	def read_data(self,buffer_num=1):
-		memory_data = self.read_raw(buffer_num)[0]
-		counter_data  = self.read_raw(buffer_num)[1]
+	def read_data(self,buffer_num):
+		(memory_data,counter_data)= self.read_raw(buffer_num)
 
+		#print memory_data
+		#print counter_data
 		pix = [None]*50
 		mem = [None]*96
 		for x in range(0,25):
 
-			pix[2*x]  = int(counter_data[x] & 0xffff)
-			pix[2*x+1]= int((counter_data[x] >> 16) & 0xffff)
+			pix[2*x]  = int((counter_data[x] >> 3) & 0xffff)
+			pix[2*x+1]= int((counter_data[x] >> 19) & 0xffff)
 
 		memory_string = '';
 		for x in range(0,216):

@@ -40,32 +40,66 @@ class MAPSA:
 	def VDDPST_on(self):
 		write = self._Utility.getNode('MPA_settings').getNode("VDDPST_enable").write(0x1)
 		self._hw.dispatch()
-		time.sleep(0.001)
-		return self._voltage_wait("VDDPST","on")
+		#write = self._Utility.getNode('MPA_settings').getNode("VDDPST_enable").write(0x1)
+		#self._hw.dispatch()
+		time.sleep(0.01)
+
+		#return self._voltage_wait("VDDPST","on")
+
 
 	def DVDD_on(self):
 		write = self._Utility.getNode('MPA_settings').getNode("DVDD_enable").write(0x1)
 		self._hw.dispatch()
-		time.sleep(0.001)
-		return self._voltage_wait("DVDD","on")
+		#write = self._Utility.getNode('MPA_settings').getNode("DVDD_enable").write(0x1)
+		#self._hw.dispatch()
+		time.sleep(0.01)
+
+		#return self._voltage_wait("DVDD","on")
 
 	def AVDD_on(self):
 		write = self._Utility.getNode('MPA_settings').getNode("AVDD_enable").write(0x1)
 		self._hw.dispatch()
-		time.sleep(0.001)
-		return self._voltage_wait("AVDD","on")
+		#write = self._Utility.getNode('MPA_settings').getNode("AVDD_enable").write(0x1)
+		#self._hw.dispatch()
+		time.sleep(0.01)
+		#if self._voltage_wait("AVDD","on"):
+		if True:
+			write = self._Utility.getNode('MPA_settings').getNode("VBIAS_enable").write(0x1)
+			self._hw.dispatch()
+			write = self._Utility.getNode('MPA_settings').getNode("VBIAS_enable").write(0x1)
+			self._hw.dispatch()
+			print "VBIFEED on"
+			write = self._Utility.getNode('DAC_register').write(0x12BE)
+			self._hw.dispatch()
+			time.sleep(0.01)
+			print "VBIAS on"
+			write = self._Utility.getNode('DAC_register').write(0x10BE)
+			self._hw.dispatch()
+			time.sleep(0.01)
+			print "VBIPRE on"
+			write = self._Utility.getNode('DAC_register').write(0x11BE)
+			self._hw.dispatch()
+			time.sleep(0.01)
+
+			return 1
+		else:
+			return 0
 
 	def PVDD_on(self):
+
 		write = self._Utility.getNode('MPA_settings').getNode("PVDD_enable").write(0x1)
 		self._hw.dispatch()
-		time.sleep(0.001)
-		return self._voltage_wait("PVDD","on")
+		#write = self._Utility.getNode('MPA_settings').getNode("PVDD_enable").write(0x1)
+		#self._hw.dispatch()
+		time.sleep(0.01)
+
+		#return self._voltage_wait("PVDD","on")
 
 	def VBIAS_on(self):
 		write = self._Utility.getNode('MPA_settings').getNode("VBIAS_enable").write(0x1)
 		self._hw.dispatch()
-		time.sleep(0.001)
-		return self._voltage_wait("VBIAS","on")
+		time.sleep(0.01)
+		#return self._voltage_wait("VBIAS","on")
 
 
 
@@ -73,32 +107,98 @@ class MAPSA:
 
 
 	def VDDPST_off(self):
+	
 		write = self._Utility.getNode('MPA_settings').getNode("VDDPST_enable").write(0x0)
 		self._hw.dispatch()
-		time.sleep(0.001)
+		write = self._Utility.getNode('MPA_settings').getNode("VDDPST_enable").write(0x0)
+		self._hw.dispatch()
+		time.sleep(0.01)
+
 		return self._voltage_wait("VDDPST","off")
 
 	def DVDD_off(self):
 		write = self._Utility.getNode('MPA_settings').getNode("DVDD_enable").write(0x0)
 		self._hw.dispatch()
-		time.sleep(0.001)
+		write = self._Utility.getNode('MPA_settings').getNode("DVDD_enable").write(0x0)
+		self._hw.dispatch()
+		time.sleep(0.01)
 		return self._voltage_wait("DVDD","off")
 
 	def AVDD_off(self):
 		write = self._Utility.getNode('MPA_settings').getNode("AVDD_enable").write(0x0)
 		self._hw.dispatch()
-		time.sleep(0.001)
-		return self._voltage_wait("AVDD","off")
+		write = self._Utility.getNode('MPA_settings').getNode("AVDD_enable").write(0x0)
+		self._hw.dispatch()
+		time.sleep(0.01)
+		if self._voltage_wait("AVDD","off"):
+			print "VBIPRE off"
+			write = self._Utility.getNode('DAC_register').write(0x1100)
+			self._hw.dispatch()
+			time.sleep(0.01)
 
+			print "VBIAS off"
+			write = self._Utility.getNode('DAC_register').write(0x1000)
+			self._hw.dispatch()
+			time.sleep(0.01)
+
+			print "VBIFEED off"
+			write = self._Utility.getNode('DAC_register').write(0x1200)
+			self._hw.dispatch()
+			time.sleep(0.01)
+			return 1
+		else:
+			return 0
 	def PVDD_off(self):
 		write = self._Utility.getNode('MPA_settings').getNode("PVDD_enable").write(0x0)
 		self._hw.dispatch()
-		time.sleep(0.001)
+		write = self._Utility.getNode('MPA_settings').getNode("PVDD_enable").write(0x0)
+		self._hw.dispatch()
+		time.sleep(0.01)
 		return self._voltage_wait("PVDD","off")
 
 	def VBIAS_off(self):
 		write = self._Utility.getNode('MPA_settings').getNode("VBIAS_enable").write(0x0)
 		self._hw.dispatch()
-		time.sleep(0.001)
+		time.sleep(0.01)
 		return self._voltage_wait("VBIAS","off")
 
+
+	def Safe_power_on(self):
+		success=False
+		print "VDDPST on"
+		if mapsa.VDDPST_on():
+			time.sleep(0.1)
+			print "DVDD on"
+			if mapsa.DVDD_on():
+				time.sleep(0.1)
+				print "AVDD on"
+				if mapsa.AVDD_on():
+					time.sleep(0.1)
+					print "PVDD on"
+					if mapsa.PVDD_on():
+						print "Power on completed sucessfully"
+						success=True
+		if not success:
+			print "Power on failed, powering off"
+			mapsa.Safe_power_off()
+			logging.error("Power on unsuccessful")
+		return success
+
+	def Safe_power_off(self):
+		success=False
+		print "PVDD off"
+		if mapsa.PVDD_off() :
+			time.sleep(0.1)
+			print "AVDD off"
+			if mapsa.AVDD_off():
+				time.sleep(0.1)
+				print "DVDD off"
+				if mapsa.DVDD_off() :
+					time.sleep(0.1)
+					print "VDDPST off"
+					if mapsa.VDDPST_off():
+						print "Power on completed sucessfully"
+						success=True
+		if not success:
+			logging.error("Power off unsuccessful")
+		return success

@@ -1,9 +1,9 @@
 <?xml version='1.0' encoding = 'UTF-8' ?>
 <CONF>
     <periphery>
-	<OM>0</OM>
+	<OM>3</OM>
 	<RT>0</RT>
-	<SCW>0</SCW>
+	<SCW>1</SCW>
 	<SH2>0</SH2>
 	<SH1>0</SH1>
 	<CALDAC>15</CALDAC>
@@ -12,12 +12,12 @@
     <pixel n="1">
 	<PML>1</PML>   
 	<ARL>1</ARL>   
-	<TRIMDACL>0</TRIMDACL> 
+	<TRIMDACL>15</TRIMDACL> 
 	<CEL>1</CEL>      
 	<CW>0</CW>   	  
 	<PMR>1</PMR>    
 	<ARR>1</ARR>      
-	<TRIMDACR>0</TRIMDACR> 
+	<TRIMDACR>15</TRIMDACR> 
 	<CER>1</CER>      
 	<SP>0</SP>       
 	<SR>0</SR>       
@@ -25,12 +25,12 @@
     <pixel n="2">
 	<PML>1</PML>   
 	<ARL>1</ARL>   
-	<TRIMDACL>0</TRIMDACL> 
+	<TRIMDACL>15</TRIMDACL> 
 	<CEL>1</CEL>      
 	<CW>0</CW>   	  
 	<PMR>1</PMR>    
 	<ARR>1</ARR>      
-	<TRIMDACR>0</TRIMDACR> 
+	<TRIMDACR>15</TRIMDACR> 
 	<CER>1</CER>      
 	<SP>0</SP>       
 	<SR>0</SR>       
@@ -38,12 +38,12 @@
     <pixel n="3">
 	<PML>1</PML>   
 	<ARL>1</ARL>   
-	<TRIMDACL>0</TRIMDACL> 
+	<TRIMDACL>15</TRIMDACL> 
 	<CEL>1</CEL>      
 	<CW>0</CW>   	  
 	<PMR>1</PMR>    
 	<ARR>1</ARR>      
-	<TRIMDACR>0</TRIMDACR> 
+	<TRIMDACR>15</TRIMDACR> 
 	<CER>1</CER>      
 	<SP>0</SP>       
 	<SR>0</SR>       
@@ -51,12 +51,12 @@
     <pixel n="4">
 	<PML>1</PML>   
 	<ARL>1</ARL>   
-	<TRIMDACL>0</TRIMDACL> 
+	<TRIMDACL>15</TRIMDACL> 
 	<CEL>1</CEL>      
 	<CW>0</CW>   	  
 	<PMR>1</PMR>    
 	<ARR>1</ARR>      
-	<TRIMDACR>0</TRIMDACR> 
+	<TRIMDACR>15</TRIMDACR> 
 	<CER>1</CER>      
 	<SP>0</SP>       
 	<SR>0</SR>       
@@ -64,12 +64,12 @@
     <pixel n="5">
 	<PML>1</PML>   
 	<ARL>1</ARL>   
-	<TRIMDACL>0</TRIMDACL> 
+	<TRIMDACL>15</TRIMDACL> 
 	<CEL>1</CEL>      
 	<CW>0</CW>   	  
 	<PMR>1</PMR>    
 	<ARR>1</ARR>      
-	<TRIMDACR>0</TRIMDACR> 
+	<TRIMDACR>15</TRIMDACR> 
 	<CER>1</CER>      
 	<SP>0</SP>       
 	<SR>0</SR>       
@@ -77,12 +77,12 @@
     <pixel n="6">
 	<PML>1</PML>   
 	<ARL>1</ARL>   
-	<TRIMDACL>0</TRIMDACL> 
+	<TRIMDACL>15</TRIMDACL> 
 	<CEL>1</CEL>      
 	<CW>0</CW>   	  
 	<PMR>1</PMR>    
 	<ARR>1</ARR>      
-	<TRIMDACR>0</TRIMDACR> 
+	<TRIMDACR>15</TRIMDACR> 
 	<CER>1</CER>      
 	<SP>0</SP>       
 	<SR>0</SR>       
@@ -90,12 +90,12 @@
     <pixel n="7">
 	<PML>1</PML>   
 	<ARL>1</ARL>   
-	<TRIMDACL>0</TRIMDACL> 
+	<TRIMDACL>15</TRIMDACL> 
 	<CEL>1</CEL>      
 	<CW>0</CW>   	  
 	<PMR>1</PMR>    
 	<ARR>1</ARR>      
-	<TRIMDACR>0</TRIMDACR> 
+	<TRIMDACR>15</TRIMDACR> 
 	<CER>1</CER>      
 	<SP>0</SP>       
 	<SR>0</SR>       
@@ -103,12 +103,12 @@
     <pixel n="8">
 	<PML>1</PML>   
 	<ARL>1</ARL>   
-	<TRIMDACL>0</TRIMDACL> 
+	<TRIMDACL>15</TRIMDACL> 
 	<CEL>1</CEL>      
 	<CW>0</CW>   	  
 	<PMR>1</PMR>    
 	<ARR>1</ARR>      
-	<TRIMDACR>0</TRIMDACR> 
+	<TRIMDACR>15</TRIMDACR> 
 	<CER>1</CER>      
 	<SP>0</SP>       
 	<SR>0</SR>       
@@ -116,12 +116,12 @@
     <pixel n="9">
 	<PML>1</PML>   
 	<ARL>1</ARL>   
-	<TRIMDACL>0</TRIMDACL> 
+	<TRIMDACL>15</TRIMDACL> 
 	<CEL>1</CEL>      
 	<CW>0</CW>   	  
 	<PMR>1</PMR>    
 	<ARR>1</ARR>      
-	<TRIMDACR>0</TRIMDACR> 
+	<TRIMDACR>15</TRIMDACR> 
 	<CER>1</CER>      
 	<SP>0</SP>       
 	<SR>0</SR>       
@@ -129,12 +129,12 @@
     <pixel n="10">
 	<PML>1</PML>   
 	<ARL>1</ARL>   
-	<TRIMDACL>0</TRIMDACL> 
+	<TRIMDACL>15</TRIMDACL> 
 	<CEL>1</CEL>      
 	<CW>0</CW>   	  
 	<PMR>1</PMR>    
 	<ARR>1</ARR>      
-	<TRIMDACR>0</TRIMDACR> 
+	<TRIMDACR>15</TRIMDACR> 
 	<CER>1</CER>      
 	<SP>0</SP>       
 	<SR>0</SR>       
@@ -142,12 +142,12 @@
     <pixel n="11">
 	<PML>1</PML>   
 	<ARL>1</ARL>   
-	<TRIMDACL>0</TRIMDACL> 
+	<TRIMDACL>15</TRIMDACL> 
 	<CEL>1</CEL>      
 	<CW>0</CW>   	  
 	<PMR>1</PMR>    
 	<ARR>1</ARR>      
-	<TRIMDACR>0</TRIMDACR> 
+	<TRIMDACR>15</TRIMDACR> 
 	<CER>1</CER>      
 	<SP>0</SP>       
 	<SR>0</SR>       
@@ -155,12 +155,12 @@
     <pixel n="12">
 	<PML>1</PML>   
 	<ARL>1</ARL>   
-	<TRIMDACL>0</TRIMDACL> 
+	<TRIMDACL>15</TRIMDACL> 
 	<CEL>1</CEL>      
 	<CW>0</CW>   	  
 	<PMR>1</PMR>    
 	<ARR>1</ARR>      
-	<TRIMDACR>0</TRIMDACR> 
+	<TRIMDACR>15</TRIMDACR> 
 	<CER>1</CER>      
 	<SP>0</SP>       
 	<SR>0</SR>       
@@ -168,12 +168,12 @@
     <pixel n="13">
 	<PML>1</PML>   
 	<ARL>1</ARL>   
-	<TRIMDACL>0</TRIMDACL> 
+	<TRIMDACL>15</TRIMDACL> 
 	<CEL>1</CEL>      
 	<CW>0</CW>   	  
 	<PMR>1</PMR>    
 	<ARR>1</ARR>      
-	<TRIMDACR>0</TRIMDACR> 
+	<TRIMDACR>15</TRIMDACR> 
 	<CER>1</CER>      
 	<SP>0</SP>       
 	<SR>0</SR>       
@@ -181,12 +181,12 @@
     <pixel n="14">
 	<PML>1</PML>   
 	<ARL>1</ARL>   
-	<TRIMDACL>0</TRIMDACL> 
+	<TRIMDACL>15</TRIMDACL> 
 	<CEL>1</CEL>      
 	<CW>0</CW>   	  
 	<PMR>1</PMR>    
 	<ARR>1</ARR>      
-	<TRIMDACR>0</TRIMDACR> 
+	<TRIMDACR>15</TRIMDACR> 
 	<CER>1</CER>      
 	<SP>0</SP>       
 	<SR>0</SR>       
@@ -194,12 +194,12 @@
     <pixel n="15">
 	<PML>1</PML>   
 	<ARL>1</ARL>   
-	<TRIMDACL>0</TRIMDACL> 
+	<TRIMDACL>15</TRIMDACL> 
 	<CEL>1</CEL>      
 	<CW>0</CW>   	  
 	<PMR>1</PMR>    
 	<ARR>1</ARR>      
-	<TRIMDACR>0</TRIMDACR> 
+	<TRIMDACR>15</TRIMDACR> 
 	<CER>1</CER>      
 	<SP>0</SP>       
 	<SR>0</SR>       
@@ -207,12 +207,12 @@
     <pixel n="16">
 	<PML>1</PML>   
 	<ARL>1</ARL>   
-	<TRIMDACL>0</TRIMDACL> 
+	<TRIMDACL>15</TRIMDACL> 
 	<CEL>1</CEL>      
 	<CW>0</CW>   	  
 	<PMR>1</PMR>    
 	<ARR>1</ARR>      
-	<TRIMDACR>0</TRIMDACR> 
+	<TRIMDACR>15</TRIMDACR> 
 	<CER>1</CER>      
 	<SP>0</SP>       
 	<SR>0</SR>       
@@ -220,12 +220,12 @@
     <pixel n="17">
 	<PML>1</PML>   
 	<ARL>1</ARL>   
-	<TRIMDACL>0</TRIMDACL> 
+	<TRIMDACL>15</TRIMDACL> 
 	<CEL>1</CEL>      
 	<CW>0</CW>   	  
 	<PMR>1</PMR>    
 	<ARR>1</ARR>      
-	<TRIMDACR>0</TRIMDACR> 
+	<TRIMDACR>15</TRIMDACR> 
 	<CER>1</CER>      
 	<SP>0</SP>       
 	<SR>0</SR>       
@@ -233,12 +233,12 @@
     <pixel n="18">
 	<PML>1</PML>   
 	<ARL>1</ARL>   
-	<TRIMDACL>0</TRIMDACL> 
+	<TRIMDACL>15</TRIMDACL> 
 	<CEL>1</CEL>      
 	<CW>0</CW>   	  
 	<PMR>1</PMR>    
 	<ARR>1</ARR>      
-	<TRIMDACR>0</TRIMDACR> 
+	<TRIMDACR>15</TRIMDACR> 
 	<CER>1</CER>      
 	<SP>0</SP>       
 	<SR>0</SR>       
@@ -246,12 +246,12 @@
     <pixel n="19">
 	<PML>1</PML>   
 	<ARL>1</ARL>   
-	<TRIMDACL>0</TRIMDACL> 
+	<TRIMDACL>15</TRIMDACL> 
 	<CEL>1</CEL>      
 	<CW>0</CW>   	  
 	<PMR>1</PMR>    
 	<ARR>1</ARR>      
-	<TRIMDACR>0</TRIMDACR> 
+	<TRIMDACR>15</TRIMDACR> 
 	<CER>1</CER>      
 	<SP>0</SP>       
 	<SR>0</SR>       
@@ -259,12 +259,12 @@
     <pixel n="20">
 	<PML>1</PML>   
 	<ARL>1</ARL>   
-	<TRIMDACL>0</TRIMDACL> 
+	<TRIMDACL>15</TRIMDACL> 
 	<CEL>1</CEL>      
 	<CW>0</CW>   	  
 	<PMR>1</PMR>    
 	<ARR>1</ARR>      
-	<TRIMDACR>0</TRIMDACR> 
+	<TRIMDACR>15</TRIMDACR> 
 	<CER>1</CER>      
 	<SP>0</SP>       
 	<SR>0</SR>       
@@ -272,12 +272,12 @@
     <pixel n="21">
 	<PML>1</PML>   
 	<ARL>1</ARL>   
-	<TRIMDACL>0</TRIMDACL> 
+	<TRIMDACL>15</TRIMDACL> 
 	<CEL>1</CEL>      
 	<CW>0</CW>   	  
 	<PMR>1</PMR>    
 	<ARR>1</ARR>      
-	<TRIMDACR>0</TRIMDACR> 
+	<TRIMDACR>15</TRIMDACR> 
 	<CER>1</CER>      
 	<SP>0</SP>       
 	<SR>0</SR>       
@@ -285,12 +285,12 @@
     <pixel n="22">
 	<PML>1</PML>   
 	<ARL>1</ARL>   
-	<TRIMDACL>0</TRIMDACL> 
+	<TRIMDACL>15</TRIMDACL> 
 	<CEL>1</CEL>      
 	<CW>0</CW>   	  
 	<PMR>1</PMR>    
 	<ARR>1</ARR>      
-	<TRIMDACR>0</TRIMDACR> 
+	<TRIMDACR>15</TRIMDACR> 
 	<CER>1</CER>      
 	<SP>0</SP>       
 	<SR>0</SR>       
@@ -298,12 +298,12 @@
     <pixel n="23">
 	<PML>1</PML>   
 	<ARL>1</ARL>   
-	<TRIMDACL>0</TRIMDACL> 
+	<TRIMDACL>15</TRIMDACL> 
 	<CEL>1</CEL>      
 	<CW>0</CW>   	  
 	<PMR>1</PMR>    
 	<ARR>1</ARR>      
-	<TRIMDACR>0</TRIMDACR> 
+	<TRIMDACR>15</TRIMDACR> 
 	<CER>1</CER>      
 	<SP>0</SP>       
 	<SR>0</SR>       
@@ -311,12 +311,12 @@
     <pixel n="24">
 	<PML>1</PML>   
 	<ARL>1</ARL>   
-	<TRIMDACL>0</TRIMDACL> 
+	<TRIMDACL>15</TRIMDACL> 
 	<CEL>1</CEL>      
 	<CW>0</CW>   	  
 	<PMR>1</PMR>    
 	<ARR>1</ARR>      
-	<TRIMDACR>0</TRIMDACR> 
+	<TRIMDACR>15</TRIMDACR> 
 	<CER>1</CER>      
 	<SP>0</SP>       
 	<SR>0</SR>       

@@ -13,6 +13,7 @@ class MAPSA_daq:
 		self._Control		=	self._hw.getNode("Control")
 		self._Configuration 	=  	self._hw.getNode("Configuration")
 		self._Readout 		=  	self._hw.getNode("Readout")
+		self._Sequencer		=	self._Control.getNode("Sequencer") 
 
 		self._puls_num   = self._Shutter.getNode("Strobe").getNode("number")
 		self._puls_len   = self._Shutter.getNode("Strobe").getNode("length")
@@ -20,39 +21,76 @@ class MAPSA_daq:
 		self._puls_del   = self._Shutter.getNode("Strobe").getNode("delay")
 		self._shuttertime	= self._Shutter.getNode("time")
 		self._shutterbusy	= self._Shutter.getNode("busy")
+		self._shuttermode	= self._Shutter.getNode("mode")
 
-		self._readoutbusy  = self._Control.getNode("Sequencer").getNode("busy")
-		self._calib  = self._Control.getNode("Sequencer").getNode("calibration")
-		self._read  = self._Control.getNode("Sequencer").getNode("readout")
-		self._buffers  = self._Control.getNode("Sequencer").getNode("buffers_index")
-		self._data_continuous  = self._Control.getNode("Sequencer").getNode("datataking_continuous")
+		self._sequencerbusy  = self._Sequencer.getNode("busy")
+		self._calib  = self._Sequencer.getNode("calibration")
+		self._read  = self._Sequencer.getNode("readout")
+		self._buffers  = self._Sequencer.getNode("buffers_index")
+		self._data_continuous  = self._Sequencer.getNode("datataking_continuous")
 
 		self._memory  = self._Readout.getNode("Memory")
 		self._counter  = self._Readout.getNode("Counter")
+		self._busyread  = self._Readout.getNode("busy")
+		self._readmode  = self._Readout.getNode("memory_readout")
+		self._readbuff  = self._Readout.getNode("buffer_num")
 
+    		self._clken = self._Control.getNode("MPA_clock_enable") 		  
+    		self._testbeam = self._Control.getNode("testbeam_mode") 		  
 
-	def _wait(self):
-		ready=3
+	def _waitreadout(self):
+		busyread = self._busyread.read()
+		self._hw.dispatch()
+		count = 0
+		while busyread:
+			time.sleep(0.005)
+			busy = self._busyread.read()
+		        self._hw.dispatch()
+			count = count + 1
+			if count > 100:
+				print "Idle"
+				return 0
+		#print "Finished"
+		#print "Readout took " + str(count*0.005) + " seconds"
+                return 1
+				
+
+	def _waitsequencer(self):
 		i=0
-		while ready!=0:
-			busyshutter = self._shutterbusy.read()
-			busyread = self._readoutbusy.read()
+		busyseq = self._sequencerbusy.read()
+		self._hw.dispatch()
+		while busyseq:
+			busyseq = self._sequencerbusy.read()
 			self._hw.dispatch()
-
-			if busyshutter and ready==3:
-				ready[i-1]-=1
-			if busyread and ready==2:	
-				ready[i-1]-=1
-			if not busyread and ready==1:
-				ready[i-1]-=1
 
 			time.sleep(0.001)
 			i+=1
-			if i>10:
+			if i>100:
+				print "timeout"
 				return 0
 		
-		print "DAQ took " + i*0.001 + " seconds"
+		#print "Sequencer took " + str(i*0.001) + " seconds"
 		return 1
+
+
+
+	def _waitshutter(self):
+		i=0
+		busyshutter = self._shutterbusy.read()
+		self._hw.dispatch()
+		while busyshutter:
+			busyshutter = self._shutterbusy.read()
+			self._hw.dispatch()
+
+			time.sleep(0.001)
+			i+=1
+			if i>100:
+				print "timeout"
+				return 0
+		
+		#print "DAQ took " + str(i*0.001) + " seconds"
+		return 1
+
 
 	def calibrationpulse(self, npulse=128, length=50, dist=50, inidelay = 50):
 
@@ -74,35 +112,41 @@ class MAPSA_daq:
 		
 		time.sleep(0.001)
 
-	def triggerloop(self,shutterdelay):
+	def daqloop(self,shutterdur=10000,calib=0,data_continuous=0,read=1,buffers=1,testbeamclock=0):
 		cycle = (1000.0/320.0)
 
-		delay = int(round(shutterdelay/cycle))
-		if float(delay) != shutterdelay/cycle :
-			print "Using " +str(delay*cycle)+"ns instead of " + str(shutterdelay)
-		if len(hex_to_binary(frmt(delay)))>32:
-			print "Shutter delay time out of bounds"
+		dur = int(round(shutterdur/cycle))
+		if float(dur) != shutterdur/cycle :
+			print "Using " +str(dur*cycle)+"ns instead of " + str(shutterdur)
+		if len(hex_to_binary(frmt(dur)))>32:
+			print "Shutter max duration time out of bounds"
 
-		self._shuttertime.write(delay)
-		self._hw.dispatch()
-		
-		time.sleep(0.001)
-		
-		
-		self._calib.write(0)
-		self._read.write(1)
-
-		self._data_continuous.write(1)
-
-		self._buffers.write(1)
+		self._shuttertime.write(dur)
+		self._clken.write(0x1)		  
+    		self._testbeam.write(testbeamclock)		  
 		self._hw.dispatch()
 
-		time.sleep(0.001)
+		#self._calib.write(0)
+		self._calib.write(calib)
+		self._read.write(read)
+		self._data_continuous.write(data_continuous)
+		self._buffers.write(buffers)
+		self._hw.dispatch()
+		return self._waitsequencer()
+
+	def start_readout(self,buffer_num=1,mode=0x0):
+
+		self._readbuff.write(buffer_num-1)
+		self._readmode.write(mode)
+		self._hw.dispatch()
+
+		return self._waitreadout()
 
 	def read_data(self,buffer_num=1):
 		counts = []  
 		mems = []  
 		for i in range(1,7):
+
 			pix,mem = MPA(self._hw,i).daq().read_data(buffer_num)
 			counts.append(pix) 
 			mems.append(mem)
@@ -123,9 +167,28 @@ class MAPSA_daq:
 
 
 
+	def Strobe_settings(self,snum,sdel,slen,sdist):
+
+		self._puls_num.write(snum)
+		self._puls_del.write(sdel)
+		self._puls_len.write(slen)
+		self._puls_dist.write(sdist)
 
 
-
+		self._hw.dispatch()
+		#time.sleep(0.001)
+		
 
 			
-			
+	def Shutter_open(self,smode,sdur):			
+
+		self._shuttertime.write(sdur)
+    		self._clken.write(0x1)		  
+    		self._testbeam.write(0x0)		  
+
+		self._hw.dispatch()
+		#time.sleep(0.001)
+		self._shuttermode.write(smode)
+		self._hw.dispatch()
+		#time.sleep(0.0001)
+		self._waitshutter()

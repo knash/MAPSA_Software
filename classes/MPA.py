@@ -1,6 +1,6 @@
 from MPA_config import *
 from MPA_daq import *
-from MPA_testbeam import *
+
 class MPA:
 	def __init__(self, hw, nmpa):
 		self._hw     		= 	hw

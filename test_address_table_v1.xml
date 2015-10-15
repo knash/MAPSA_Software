@@ -5,6 +5,7 @@
     		<node id="firm_ver"            		address="0x00000000" mask="0xFFFF0000"   permission="r"    />
     		<node id="strip_phase"		    	address="0x00000001"  mask="0x000001FF"  permission="rw"    />
     		<node id="MPA_clock_enable"		    	address="0x00000002"  mask="0x00000001"  permission="rw"    />
+    		<node id="testbeam_mode"		    	address="0x00000002"  mask="0x00000002"  permission="rw"    />
     		<node id="Sequencer" address="0x00000080">
     			<node id="calibration"         			mask="0x00000001"  permission="rw"    />
     			<node id="readout"           			mask="0x00000002"  permission="rw"    />
@@ -83,7 +84,8 @@
     		<node id="write"        			address="0x00004006" mask="0x0000003F"   permission="w"   />
 	</node>    	
 	<node id="Configuration">
-    		<node id="mode"        			address="0x00006000" mask="0x0000001F"   permission="rw"   />
+    		<node id="mode"        			address="0x00006000" mask="0x0000001F"   permission="w"   />
+    		<node id="busy"        			address="0x00006000" mask="0x00000001"   permission="r"   />
     		<node id="num_MPA"          		address="0x00006001" mask="0x00000007"   permission="rw"    />
     		<node id="freq"          			address="0x00006002" mask="0x0000000F"   permission="rw"    />
     		<node id="DataConf_address"          	address="0x00006003" mask="0x00007FFF"   permission="r"    />

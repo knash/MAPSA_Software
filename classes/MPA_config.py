@@ -14,7 +14,7 @@ class MPA_config:
 		self._Control =  self._hw.getNode("Control")
 		self._Utility =  self._hw.getNode("Utility")
 		self._Configuration =  self._hw.getNode("Configuration")
-		self._SPI_busy    = self._Utility.getNode("SPI_busy")
+		self._Conf_busy    = self._Configuration.getNode("busy")
 
 		self._Memory_DataConf   = self._Configuration.getNode("Memory_DataConf")	
 
@@ -24,12 +24,13 @@ class MPA_config:
 
 
 	def _spi_wait(self):
-		busy = self._SPI_busy.read()
+		busy = self._Conf_busy.read()
 		self._hw.dispatch()
 		while busy:
 			time.sleep(0.001)
-			busy = self._SPI_busy.read()
+			busy = self._Conf_busy.read()
 			self._hw.dispatch()
+			print busy
 
 	def _get_pixel_fromfile(self, pixel):
 		val = 0
@@ -84,6 +85,14 @@ class MPA_config:
 			print cur
 		self._spi_wait()
 		self._Memory_DataConf.getNode("MPA"+str(self._nmpa)).getNode("config_"+str(Config)).writeBlock(cur)
+		self._hw.getNode("Configuration").getNode("num_MPA").write(0x1)
+		self._hw.dispatch()
+
+		self._hw.getNode("Configuration").getNode("mode").write(6-self._nmpa)
+		self._hw.dispatch()
+		#self._hw.getNode("Configuration").getNode("mode").write(6-self._nmpa)
+		#self._hw.dispatch()
+
 		self._spi_wait()
 		return cur
 
@@ -101,7 +110,7 @@ class MPA_config:
 			for px in pixel:
 				if int(px.attrib['n']) == which:
 					px.find(what).text = str(value)
-		
+
 	def modifyperiphery(self, what, value):
 		per = self.xmlroot.find('periphery')
 		per.find(what).text = str(value)
