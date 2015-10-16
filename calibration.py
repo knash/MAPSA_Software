@@ -182,8 +182,10 @@ for iy1 in range(0,len(yarr[0,:])-1):
 
 				trimdac = int(prev_trim)
 				thdacv.append(trimdac)
-				break	
-offset =int(15-np.mean(thdacv))
+				break
+range1 = min(thdacv)	
+range2 = max(thdacv)	
+offset =int(15-(range1+range2)*0.5)
 for iy1 in range(0,len(yarr[0,:])-1):
 				if iy1%2==0:
 
