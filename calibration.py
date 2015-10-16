@@ -81,7 +81,7 @@ for x in range(1,25):
 		curconf.modifypixel(x,'ARR', 1)
 		curconf.modifypixel(x,'CER', 1)
 		curconf.modifypixel(x,'SP',  0) 
-		curconf.modifypixel(x,'SR',  1) 
+		curconf.modifypixel(x,'SR',  0) 
 
 
 curconf.upload()
@@ -170,12 +170,8 @@ for iy1 in range(0,len(yarr[0,:])-1):
 					xdacval = xval1
 				trimdac = int(31) + prev_trim - int(xdacval*1.456/3.75)
 				print trimdac
-				if trimdac<0:
-					trimdac = int(0)					
-				if iy1%2==0:
-					calibconf.modifypixel((iy1)/2+1,'TRIMDACL',trimdac )
-				else:
-					calibconf.modifypixel((iy1+1)/2,'TRIMDACR',trimdac)
+					
+
 				thdacv.append(trimdac)
 				break	
 			if ibin==len(xvec)-2:
@@ -185,12 +181,15 @@ for iy1 in range(0,len(yarr[0,:])-1):
 					prev_trim = int(calibconfxmlroot[(iy1+1)/2].find('TRIMDACR').text)
 
 				trimdac = int(prev_trim)
-				if iy1%2==0:
-					calibconf.modifypixel((iy1)/2+1,'TRIMDACL',trimdac )
-				else:
-					calibconf.modifypixel((iy1+1)/2,'TRIMDACR', trimdac)
 				thdacv.append(trimdac)
 				break	
+offset =int(15-np.mean(thdacv))
+for iy1 in range(0,len(yarr[0,:])-1):
+				if iy1%2==0:
+
+					calibconf.modifypixel((iy1)/2+1,'TRIMDACL',max(0,thdacv[iy1]+offset))
+				else:
+					calibconf.modifypixel((iy1+1)/2,'TRIMDACR',max(0,thdacv[iy1]+offset))
 
 print thdacv
 
