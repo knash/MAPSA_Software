@@ -18,7 +18,7 @@ from matplotlib.pyplot import show, plot
 from optparse import OptionParser
 parser = OptionParser()
 parser.add_option('-c', '--charge', metavar='F', type='int', action='store',
-default	=	50,
+default	=	30,
 dest	=	'charge',
 help	=	'Charge for caldac')
 parser.add_option('-n', '--number', metavar='F', type='int', action='store',
@@ -225,7 +225,7 @@ for x in range(1,25):
 		curconf1.modifypixel(x,'PMR', 1)
 		curconf1.modifypixel(x,'ARR', 1)
 		curconf1.modifypixel(x,'CER', 1)
-		curconf1.modifypixel(x,'SP',  0) 
+		curconf1.modifypixel(x,'SP',  1) 
 		curconf1.modifypixel(x,'SR',  0) 
 curconf1.upload()
 
