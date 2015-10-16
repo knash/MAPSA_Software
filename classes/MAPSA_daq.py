@@ -122,8 +122,6 @@ class MAPSA_daq:
 			print "Shutter max duration time out of bounds"
 
 		self._shuttertime.write(dur)
-		self._clken.write(0x1)		  
-    		self._testbeam.write(testbeamclock)		  
 		self._hw.dispatch()
 
 		#self._calib.write(0)
@@ -131,6 +129,8 @@ class MAPSA_daq:
 		self._read.write(read)
 		self._data_continuous.write(data_continuous)
 		self._buffers.write(buffers)
+    		self._testbeam.write(testbeamclock)		  
+		self._clken.write(0x1)		  
 		self._hw.dispatch()
 		return self._waitsequencer()
 

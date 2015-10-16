@@ -18,7 +18,7 @@ from matplotlib.pyplot import show, plot
 from optparse import OptionParser
 parser = OptionParser()
 parser.add_option('-c', '--charge', metavar='F', type='int', action='store',
-default	=	25,
+default	=	50,
 dest	=	'charge',
 help	=	'Charge for caldac')
 parser.add_option('-n', '--number', metavar='F', type='int', action='store',
@@ -65,9 +65,6 @@ Confnum=1
 configarr = []
 
 curconf = mpa[mpa_index].config(xmlfile="data/Conf_default_MPA"+str(mpa_number)+"_config1.xml")
-
-
-
 curconf.modifyperiphery('OM',3)
 curconf.modifyperiphery('RT',0)
 curconf.modifyperiphery('SCW',0)
@@ -84,10 +81,13 @@ for x in range(1,25):
 		curconf.modifypixel(x,'ARR', 1)
 		curconf.modifypixel(x,'CER', 1)
 		curconf.modifypixel(x,'SP',  0) 
-		curconf.modifypixel(x,'SR',  0) 
+		curconf.modifypixel(x,'SR',  1) 
 
 
 curconf.upload()
+
+
+
 mapsa.daq().Strobe_settings(snum,sdel,slen,sdist)
 x1 = array('d')
 y1 = []
@@ -104,7 +104,6 @@ for x in range(0,256):
 
 			#mapsa.daq().daqloop(shutterdur=0,calib=1,data_continuous=0,read=0,buffers=buffnum,testbeamclock=0)
 
-
 			mapsa.daq().Shutter_open(smode,sdur)
 			mapsa.daq().start_readout(1,0x0)
 
@@ -113,9 +112,9 @@ for x in range(0,256):
 			pix.pop(0)
 			x1.append(x)
 			y1.append(array('d',pix))
-			print pix
+			#print pix
 			#print ""
-			time.sleep(0.01)
+			time.sleep(0.001)
 	
 #print x1
 #print y1
@@ -204,7 +203,7 @@ c1.Print('plots/Scurve_Calibration_pre.png', 'png')
 
 
 xmlrootfile = calibconf.xmltree
-print "writing " + "data/Conf_calibrated_MPA"+str(mpa_number)+"_config1.xml"
+print "writing data/Conf_calibrated_MPA"+str(mpa_number)+"_config1.xml"
 xmlrootfile.write("data/Conf_calibrated_MPA"+str(mpa_number)+"_config1.xml")
 print "Testing Calibration"
 
@@ -241,8 +240,6 @@ for x in range(0,256):
 
 			curconf1.modifyperiphery('THDAC',x)
 			curconf1.upload()
-
-			time.sleep(0.001)
 
 			#mapsa.daq().daqloop(shutterdur=0,calib=1,data_continuous=0,read=0,buffers=buffnum,testbeamclock=0)
 
