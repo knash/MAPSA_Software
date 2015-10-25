@@ -35,19 +35,37 @@ class MPA_daq:
 		self._readbuff  = self._Readout.getNode("buffer_num")
 
 
+	def _waitreadout(self):
+		busyread = self._busyread.read()
+		self._hw.dispatch()
+		count = 0
+		while busyread:
+			time.sleep(0.005)
+			busy = self._busyread.read()
+		        self._hw.dispatch()
+			count = count + 1
+			if count > 100:
+				print "readout Idle"
+				return 0
+		#print "Finished"
+		#print "Readout took " + str(count*0.005) + " seconds"
+                return 1
+				
 
 
-	def read_raw(self,buffer_num):
+	def read_raw(self,buffer_num,dcindex):
 
-		counter_data  = self._counter.getNode("MPA"+str(self._nmpa)).readBlock(25)
+		counter_data  = self._counter.getNode("MPA"+str(dcindex)).readBlock(25)
 		memory_data = self._memory.getNode("MPA"+str(self._nmpa)).getNode("buffer_"+str(buffer_num)).readBlock(216)
 
 		self._hw.dispatch()
-
+		self._waitreadout()
 		return [memory_data,counter_data]
 
-	def read_data(self,buffer_num):
-		(memory_data,counter_data)= self.read_raw(buffer_num)
+	def read_data(self,buffer_num,dcindex=-1):
+		if dcindex==-1:
+			dcindex=self._nmpa
+		(memory_data,counter_data)= self.read_raw(buffer_num,dcindex)
 
 		#print memory_data
 		#print counter_data
@@ -70,8 +88,8 @@ class MPA_daq:
 ##############UNEDITED			
 
 
-	def read_memory(self, mode,buffer_num=1):
-		(count, mem) = self.read_data(buffer_num)
+	def read_memory(self, mem,mode):
+
 		memory = np.array(mem)
 		BX = []
 		hit = []
@@ -125,7 +143,7 @@ class MPA_daq:
 			data = hit		
 		
 		BX = filter(lambda a: a!=0, BX)		
-		return BX, data, count	
+		return BX, data	
 			
 	
 	

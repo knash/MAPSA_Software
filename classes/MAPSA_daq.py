@@ -48,7 +48,7 @@ class MAPSA_daq:
 		        self._hw.dispatch()
 			count = count + 1
 			if count > 100:
-				print "Idle"
+				print "readout Idle"
 				return 0
 		#print "Finished"
 		#print "Readout took " + str(count*0.005) + " seconds"
@@ -134,13 +134,13 @@ class MAPSA_daq:
 		self._hw.dispatch()
 		return self._waitsequencer()
 
-	def start_readout(self,buffer_num=1,mode=0x0):
+	def start_readout(self,buffer_num=1,mode=0x1):
 
 		self._readbuff.write(buffer_num-1)
 		self._readmode.write(mode)
 		self._hw.dispatch()
 
-		return self._waitreadout()
+
 
 	def read_data(self,buffer_num=1):
 		counts = []  
@@ -181,14 +181,13 @@ class MAPSA_daq:
 
 			
 	def Shutter_open(self,smode,sdur):			
-
+   
 		self._shuttertime.write(sdur)
     		self._clken.write(0x1)		  
     		self._testbeam.write(0x0)		  
-
 		self._hw.dispatch()
-		#time.sleep(0.001)
+
 		self._shuttermode.write(smode)
 		self._hw.dispatch()
-		#time.sleep(0.0001)
+
 		self._waitshutter()

@@ -14,8 +14,6 @@ help	=	'setting ie on or off')
 
 (options, args) = parser.parse_args()
 
-
-
 a = uasic(connection="file://connections_test.xml",device="board0")
 mapsa = MAPSA(a)
 read = a._hw.getNode("Control").getNode('firm_ver').read()
@@ -27,13 +25,17 @@ if options.setting=='on':
 
 
 	print "VDDPST on"
-	mapsa.VDDPST_on()
+	mapsa.VDDPST_on()				
+	time.sleep(.5)
 	print "DVDD on"
 	mapsa.DVDD_on()
+	time.sleep(.5)
 	print "AVDD on"
 	mapsa.AVDD_on()
+	time.sleep(.5)
 	print "PVDD on"
 	mapsa.PVDD_on()
+
 
 
 elif options.setting=='off':
