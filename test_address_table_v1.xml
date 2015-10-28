@@ -6,8 +6,9 @@
     		<node id="strip_phase"		    	address="0x00000001"  mask="0x000001FF"  permission="rw"    />
     		<node id="MPA_clock_enable"		    	address="0x00000002"  mask="0x00000001"  permission="rw"    />
     		<node id="testbeam_mode"		    	address="0x00000002"  mask="0x00000002"  permission="rw"    />
-    		<node id="trigger_counter"		    	address="0x000003FF"  mask="0x00000002"  permission="rw"    />
-		
+    		<node id="trigger_counter"		    	address="0x00000004"  mask="0x000003FF"  permission="rw"    />
+		<node id="trigger_offset_BEAM"		    	address="0x0000A000"  mask="0xFFFFFFFF" mode="incremental" size="0x400"  permission="rw"    />
+		<node id="trigger_offset_MPA"		    	address="0x0000A400"  mask="0xFFFFFFFF" mode="incremental" size="0x400"  permission="rw"    />
     		<node id="Sequencer" address="0x00000080">
     			<node id="calibration"         			mask="0x00000001"  permission="rw"    />
     			<node id="readout"           			mask="0x00000002"  permission="rw"    />

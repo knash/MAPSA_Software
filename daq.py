@@ -284,8 +284,13 @@ if options.setting == 'testing1':
 		a._hw.dispatch()
 		while True:
 			read = a._hw.getNode("Control").getNode('trigger_counter').read()
+			read1 = a._hw.getNode("Control").getNode('trigger_offset_BEAM').read()
+			read2 = a._hw.getNode("Control").getNode('trigger_offset_MPA').read()
+	
 			a._hw.dispatch()
 			print read
+			print read1
+			print read2
      			if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
         			line = raw_input()
 				print "Ending loop"
