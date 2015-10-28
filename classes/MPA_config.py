@@ -74,7 +74,6 @@ class MPA_config:
 			 | ((int(periphery.find('SH1').text)	& 15)  << 12)
 			 | ((int(periphery.find('CALDAC').text)	& 255) << 16)	
 			 | ((int(periphery.find('THDAC').text)	& 255) << 24))
-
 	def upload(self,show = 0,Config=1,dcindex=-1):
 		if dcindex==-1:
 			dcindex=self._nmpa
@@ -88,13 +87,32 @@ class MPA_config:
 		self._spi_wait()
 	
 		self._Memory_DataConf.getNode("MPA"+str(dcindex)).getNode("config_"+str(Config)).writeBlock(cur)
+		#self._hw.getNode("Configuration").getNode("num_MPA").write(0x1)
+		#self._hw.dispatch()
+		#self._spi_wait()
+		return cur
+
+	def uploadone(self,show = 0,Config=1,dcindex=-1):
+		if dcindex==-1:
+			dcindex=self._nmpa
+		cur = [None]*25
+		cur[0]  = self._get_periphery_fromfile(self.xmlroot.find("periphery"))
+		for pixel in self.xmlroot.findall('pixel'):
+			cur[ int(pixel.attrib['n']) ] = self._get_pixel_fromfile(pixel)
+		if (show):
+			print "uploading:"
+			print cur
+		self._spi_wait()
+		self._Memory_DataConf.getNode("MPA"+str(dcindex)).getNode("config_"+str(Config)).writeBlock(cur)
+		self._spi_wait()
+		return cur
+
+	def writeone(self,dcindex=1):
 		self._hw.getNode("Configuration").getNode("num_MPA").write(0x1)
 		self._hw.dispatch()
-
+		self._spi_wait()
 		self._hw.getNode("Configuration").getNode("mode").write(6-dcindex)
 		self._hw.dispatch()
-		#self._hw.getNode("Configuration").getNode("mode").write(6-self._nmpa)
-		#self._hw.dispatch()
 
 		self._spi_wait()
 		return cur

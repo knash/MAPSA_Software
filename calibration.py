@@ -18,7 +18,7 @@ from matplotlib.pyplot import show, plot
 from optparse import OptionParser
 parser = OptionParser()
 parser.add_option('-c', '--charge', metavar='F', type='int', action='store',
-default	=	10,
+default	=	70,
 dest	=	'charge',
 help	=	'Charge for caldac')
 parser.add_option('-n', '--number', metavar='F', type='int', action='store',
@@ -26,7 +26,7 @@ default	=	2000,
 dest	=	'number',
 help	=	'number of calstrobe pulses to send')
 parser.add_option('-m', '--mpa', metavar='F', type='int', action='store',
-default	=	1,
+default	=	0,
 dest	=	'mpa',
 help	=	'mpa to configure (0 for all)')
 parser.add_option('-r', '--res', metavar='F', type='int', action='store',
@@ -53,8 +53,8 @@ sdur = 0xFFFFFFF
 
 
 snum = options.number
-sdel = 0xFFFF
-slen = 0xFF
+sdel = 0xFFF
+slen = 0xF
 sdist = 0x50
 
 
@@ -78,16 +78,43 @@ CE=0
 SP=1
 
 
+if options.mpa==0:
 
-curconf = mpa[mpa_index].config(xmlfile="data/Conf_default_MPA"+str(mpa_number)+"_config1.xml")
-curconf.modifyperiphery('OM',3)
-curconf.modifyperiphery('RT',0)
-curconf.modifyperiphery('SCW',0)
-curconf.modifyperiphery('SH2',0)
-curconf.modifyperiphery('SH1',0)
-curconf.modifyperiphery('THDAC',0)
-curconf.modifyperiphery('CALDAC', options.charge)
-for x in range(1,25):
+	config = mapsa.config(Config=1,string='default')
+	config.upload()
+
+
+	config.modifyperiphery('OM',[3]*6)
+	config.modifyperiphery('RT',[0]*6)
+	config.modifyperiphery('SCW',[0]*6)
+	config.modifyperiphery('SH2',[0]*6)
+	config.modifyperiphery('SH1',[0]*6)
+	config.modifyperiphery('THDAC',[0]*6)
+	config.modifyperiphery('CALDAC', [options.charge]*6)
+	for x in range(1,25):
+		config.modifypixel(x,'PML', [1]*6)
+		config.modifypixel(x,'ARL', [1]*6)
+		config.modifypixel(x,'CEL', [CE]*6)
+		config.modifypixel(x,'CW', [0]*6)
+		config.modifypixel(x,'PMR', [1]*6)
+		config.modifypixel(x,'ARR', [1]*6)
+		config.modifypixel(x,'CER', [CE]*6)
+		config.modifypixel(x,'SP',  [SP]*6) 
+		config.modifypixel(x,'SR',  [1]*6) 
+
+
+	config.write()
+
+else:
+	curconf = mpa[mpa_index].config(xmlfile="data/Conf_default_MPA"+str(mpa_number)+"_config1.xml")
+	curconf.modifyperiphery('OM',3)
+	curconf.modifyperiphery('RT',0)
+	curconf.modifyperiphery('SCW',0)
+	curconf.modifyperiphery('SH2',0)
+	curconf.modifyperiphery('SH1',0)
+	curconf.modifyperiphery('THDAC',0)
+	curconf.modifyperiphery('CALDAC', options.charge)
+	for x in range(1,25):
 		curconf.modifypixel(x,'PML', 1)
 		curconf.modifypixel(x,'ARL', 1)
 		curconf.modifypixel(x,'CEL', CE)
@@ -99,7 +126,7 @@ for x in range(1,25):
 		curconf.modifypixel(x,'SR',  1) 
 
 
-curconf.upload(dcindex=1)
+	curconf.upload(dcindex=1)
 
 
 
@@ -111,9 +138,14 @@ for x in range(0,256):
 				continue
 			if x%10==0:
 				print "THDAC " + str(x)
+			if options.mpa==0:
+				config.modifyperiphery('THDAC',[x]*6)
+				config.upload()
+				config.write()
+			else:
 
-			curconf.modifyperiphery('THDAC',x)
-			curconf.upload(dcindex=1)
+				curconf.modifyperiphery('THDAC',x)
+				curconf.upload(dcindex=1)
 
 
 
@@ -121,32 +153,150 @@ for x in range(0,256):
 
 			mapsa.daq().Shutter_open(smode,sdur)
 			mapsa.daq().start_readout(1,0x0)
+			if options.mpa==0:
+				pix,mem = mapsa.daq().read_data(buffnum)
+				ipix=0
+				for p in pix:
 
-			pix,mem = mpa[mpa_index].daq().read_data(buffnum,dcindex=1)
-			pix.pop(0)
-			pix.pop(0)
-			#print pix
-			#print mem
-			x1.append(x)
-			y1.append(array('d',pix))
-			#print pix
-			#print ""
+					p.pop(0)
+					p.pop(0)
+					print p
+					y1.append([])
+					y1[ipix].append(array('d',p))
+
+					ipix+=1
+				x1.append(x)
+			else:
+				pix,mem = mpa[mpa_index].daq().read_data(buffnum,dcindex=1)
+
+				pix.pop(0)
+				pix.pop(0)
+
+				x1.append(x)
+				y1.append(array('d',pix))
+	
 			time.sleep(0.001)
 			
 	
 #print x1
 #print y1
 
-print "Generating nominal per pixel trimdac values"
-calibconf = mpa[mpa_index].config(xmlfile="data/Conf_default_MPA"+str(mpa_number)+"_config1.xml")
-calibconfxmlroot = mpa[mpa_index].config(xmlfile="data/Conf_default_MPA"+str(mpa_number)+"_config1.xml").xmlroot
-thdacv = []
-#gr1 = []
-xvec =  np.array(x1)
-yarr =  np.array(y1)
-gr1 = []
-c1 = TCanvas('c1', '', 700, 600)
-for iy1 in range(0,len(yarr[0,:])-1):
+if options.mpa==0:
+
+	print "Generating nominal per pixel trimdac values"
+
+	calibconfs = config._confs
+	calibconfsxmlroot = config._confsxmlroot
+
+		
+	c1 = TCanvas('c1', '', 700, 900)
+	c1.Divide(2,3)
+	#gr1 = []
+	xvec =  np.array(x1)
+	thdacvv = []
+	yarrv = []
+	for i in range(0,6):
+		calibconfxmlroot	=	calibconfsxmlroot[i]
+		
+		c1.cd(i+1)
+		thdacv = []
+		yarr =  np.array(y1[i])
+		gr1 = []
+		yarrv.append(yarr)
+		for iy1 in range(0,len(yarr[0,:])-1):
+			yvec = yarr[:,iy1]
+
+			gr1.append(TGraph(len(x1)-1,array('d',xvec),array('d',yvec)))
+			if iy1==0:
+				gr1[iy1].SetTitle(';DAC Value (1.456 mV);Counts (1/1.456)')
+				gr1[iy1].Draw()
+
+			else:
+				gr1[iy1].Draw('same')
+				gPad.Update()
+
+
+
+			halfmax = max(yvec)/2.0
+			maxbin = np.where(yvec==max(yvec))
+			if max(yvec)<1000:
+				print iy1
+			for ibin in range(0,len(xvec)-1):
+
+				xval = xvec[ibin]
+				xval1 = xvec[ibin+1]
+				yval = yvec[ibin]
+				yval1 = yvec[ibin+1]
+	
+				if yval1-halfmax<0.0 and ibin>maxbin[0][0]:
+					if iy1%2==0:
+						prev_trim = int(calibconfxmlroot[(iy1)/2+1].find('TRIMDACL').text)
+					else:
+						prev_trim = int(calibconfxmlroot[(iy1+1)/2].find('TRIMDACR').text)
+
+					if abs(yval-halfmax)<(yval1-halfmax):
+						xdacval = xval
+					else:
+						xdacval = xval1
+					trimdac = int(31) + prev_trim - int(xdacval*1.456/3.75)
+					#print trimdac
+					
+
+					thdacv.append(trimdac)
+					break	
+				if ibin==len(xvec)-2:
+					if iy1%2==0:
+						prev_trim = int(calibconfxmlroot[(iy1)/2+1].find('TRIMDACL').text)
+					else:
+						prev_trim = int(calibconfxmlroot[(iy1+1)/2].find('TRIMDACR').text)
+	
+					trimdac = int(prev_trim)
+					thdacv.append(trimdac)
+					break
+		
+		thdacvv.append(thdacv)
+
+
+	print thdacvv
+	thdacvvorg = []
+	for iy1 in range(0,len(yarrv[0][0,:])-1):
+		thdacvvorg.append(thdacvv[:,iy1])
+		upldac = []
+		for i in range(0,6):
+			thdacv = thdacvv[i]
+			range1 = min(thdacv)	
+			range2 = max(thdacv)	
+			offset =int(15-(range1+range2)*0.5)
+			upldac.append(thdacv[iy1]+offset)
+
+			#	thadacval = 
+		if iy1%2==0:
+			calibconf.modifypixel((iy1)/2+1,'TRIMDACL',max(0,upldac[iy1]))
+		else:
+			calibconf.modifypixel((iy1+1)/2,'TRIMDACR',max(0,upldac[iy1]))
+
+#print thdacv
+
+	c1.Print('plots/Scurve_Calibration_pre.root', 'root')
+	c1.Print('plots/Scurve_Calibration_pre.pdf', 'pdf')
+	c1.Print('plots/Scurve_Calibration_pre.png', 'png')
+
+
+
+
+
+
+else:
+	print "Generating nominal per pixel trimdac values"
+	calibconf = mpa[mpa_index].config(xmlfile="data/Conf_default_MPA"+str(mpa_number)+"_config1.xml")
+	calibconfxmlroot = mpa[mpa_index].config(xmlfile="data/Conf_default_MPA"+str(mpa_number)+"_config1.xml").xmlroot
+	thdacv = []
+	#gr1 = []
+	xvec =  np.array(x1)
+	yarr =  np.array(y1)
+	gr1 = []
+	c1 = TCanvas('c1', '', 700, 600)
+	for iy1 in range(0,len(yarr[0,:])-1):
 		yvec = yarr[:,iy1]
 
 		gr1.append(TGraph(len(x1)-1,array('d',xvec),array('d',yvec)))
@@ -203,10 +353,11 @@ for iy1 in range(0,len(yarr[0,:])-1):
 				trimdac = int(prev_trim)
 				thdacv.append(trimdac)
 				break
-range1 = min(thdacv)	
-range2 = max(thdacv)	
-offset =int(15-(range1+range2)*0.5)
-for iy1 in range(0,len(yarr[0,:])-1):
+	range1 = min(thdacv)	
+	range2 = max(thdacv)	
+	offset =int(15-(range1+range2)*0.5)
+
+	for iy1 in range(0,len(yarr[0,:])-1):
 				if iy1%2==0:
 
 					calibconf.modifypixel((iy1)/2+1,'TRIMDACL',max(0,thdacv[iy1]+offset))
@@ -215,9 +366,9 @@ for iy1 in range(0,len(yarr[0,:])-1):
 
 #print thdacv
 
-c1.Print('plots/Scurve_Calibration_pre.root', 'root')
-c1.Print('plots/Scurve_Calibration_pre.pdf', 'pdf')
-c1.Print('plots/Scurve_Calibration_pre.png', 'png')
+	c1.Print('plots/Scurve_Calibration_pre.root', 'root')
+	c1.Print('plots/Scurve_Calibration_pre.pdf', 'pdf')
+	c1.Print('plots/Scurve_Calibration_pre.png', 'png')
 
 
 

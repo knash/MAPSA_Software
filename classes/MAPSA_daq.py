@@ -146,9 +146,12 @@ class MAPSA_daq:
 		counts = []  
 		mems = []  
 		for i in range(1,7):
-
+			#print i
 			pix,mem = MPA(self._hw,i).daq().read_data(buffer_num)
 			counts.append(pix) 
+			#print pix
+			#print ""
+
 			mems.append(mem)
 		return counts,mems
 

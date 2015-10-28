@@ -54,12 +54,36 @@ class MPA_daq:
 
 
 	def read_raw(self,buffer_num,dcindex):
-
+		print "dcindex " +str(dcindex)
 		counter_data  = self._counter.getNode("MPA"+str(dcindex)).readBlock(25)
+		counter_data1  = self._counter.getNode("MPA1").readBlock(25)
+		counter_data2  = self._counter.getNode("MPA2").readBlock(25)
+		counter_data3  = self._counter.getNode("MPA3").readBlock(25)
+		counter_data4  = self._counter.getNode("MPA4").readBlock(25)
+		counter_data5  = self._counter.getNode("MPA5").readBlock(25)
+		counter_data6  = self._counter.getNode("MPA6").readBlock(25)
 		memory_data = self._memory.getNode("MPA"+str(self._nmpa)).getNode("buffer_"+str(buffer_num)).readBlock(216)
 
 		self._hw.dispatch()
 		self._waitreadout()
+		print "MPA1 "
+		print counter_data1
+		print 
+		print "MPA2 "
+		print counter_data2
+		print 
+		print "MPA3 "
+		print counter_data3
+		print 
+		print "MPA4 "
+		print counter_data4
+		print 
+		print "MPA5 "
+		print counter_data5
+		print 
+		print "MPA6 "
+		print counter_data6
+
 		return [memory_data,counter_data]
 
 	def read_data(self,buffer_num,dcindex=-1):

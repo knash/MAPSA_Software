@@ -2,6 +2,7 @@
 
 from MPA import *
 from MAPSA_daq import *
+from MAPSA_config import *
 class MAPSA:
 	def __init__(self, uasic):
 		self._dev    		= 	uasic
@@ -13,6 +14,9 @@ class MAPSA:
 
 	def daq(self):
 		return MAPSA_daq( self._hw)
+
+	def config(self,Config=1,string ='default'):
+		return MAPSA_config( self._hw,Config=1,string='default')
 
 	def _voltage_wait(self,supply,state):
 

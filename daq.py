@@ -71,6 +71,11 @@ default	=	'True',
 dest	=	'monitor',
 help	=	'start event monitor in background')
 
+parser.add_option('-w', '--shutterdur', metavar='F', type='string', action='store',
+default	=	'0xFFFFFFFF',
+dest	=	'shutterdur',
+help	=	'shutter duration')
+
 
 (options, args) = parser.parse_args()
 
@@ -88,9 +93,9 @@ smode = 0x1
 sdur = 0xFFFFFFFF
 
 snum = options.number
-sdel = 0xFFFF
+sdel = 0xFFF
 slen = 5
-sdist = 0xFFF
+sdist = 0xFF
 
 quickplot = TH2F("quickplot", "", 4,-0.5,3.5, 16, 0, 16 )
 
@@ -269,77 +274,43 @@ if options.setting == 'default' or options.setting == 'calibration':
 				print "Ending loop"
         			break
 
-c2 = TCanvas('c2', '', 700, 600)
 
-quickplot.Draw('colz')
-c2.Print('plots/quickplot.root', 'root')
+if options.setting == 'testing1':
+
+		print "Starting DAQ loop.  Press Enter to start and Enter to quit"
+		raw_input("...")
+
+		a._hw.getNode("Control").getNode('testbeam_mode').write(0x1)
+		a._hw.dispatch()
+		while True:
+			read = a._hw.getNode("Control").getNode('trigger_counter').read()
+			a._hw.dispatch()
+			print read
+     			if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
+        			line = raw_input()
+				print "Ending loop"
+        			break
+
 if options.setting == 'testing':
-
-
-		curconf = mpa[mpa_index].config(xmlfile="data/Conf_calibrated_MPA"+str(mpa_number)+"_config1.xml")
-		curconf.modifyperiphery('OM',3)
-		curconf.modifyperiphery('RT',0)
-		curconf.modifyperiphery('SCW',0)
-		curconf.modifyperiphery('SH2',0)
-		curconf.modifyperiphery('SH1',0)
-		curconf.modifyperiphery('THDAC',options.thresh)
-		curconf.modifyperiphery('CALDAC', options.charge)
-		for x in range(1,25):
-			if x<=6:
-				curconf.modifypixel(x,'PML', 1)
-				curconf.modifypixel(x,'PMR', 1)
-			else:
-				curconf.modifypixel(x,'PML', 1)
-				curconf.modifypixel(x,'PMR', 1)
-			curconf.modifypixel(x,'ARL', 0)
-			curconf.modifypixel(x,'CEL', 1)
-			curconf.modifypixel(x,'CW', 00)
-			curconf.modifypixel(x,'ARR', 0)
-			curconf.modifypixel(x,'CER', 1)
-			curconf.modifypixel(x,'SP',  0) 
-			curconf.modifypixel(x,'SR',  1) 
-
-		curconf.upload(dcindex=1)
-
 
 		print "Starting DAQ loop.  Press Enter to start and Enter to quit"
 		raw_input("...")
 		#write = a._hw.getNode("Control").getNode("Sequencer").getNode("buffers_index").write(0x1)
 		#a._hw.dispatch()
+		mapsa.config().modifyperiphery('THDAC',[options.thresh]*6)
+	#	mapsa.config().modifyperiphery(what='THDAC',value=options.thresh,Config=1,string='default')
+
 		while True:
-			time.sleep(.05)
-
-			print "delay"
-
-
-			time.sleep(.05)
 
 			mapsa.daq().Shutter_open(smode,sdur)
-				
-			read = a._hw.getNode("Control").getNode("Sequencer").getNode("buffers_num").read()
-			a._hw.dispatch()
-			print "free buffers " + str(read) 	
-			while read==0:
-					read = a._hw.getNode("Control").getNode("Sequencer").getNode("buffers_num").read()
-					a._hw.dispatch()	
-					print read
-			mapsa.daq().start_readout(rbuffer,0x1)
-		#	mapsa.daq().start_readout(rbuffer,0x1)
-				#mapsa.daq().daqloop(shutterdur=100,calib=0,data_continuous=0,read=1,buffers=1,testbeamclock=1)
+			mapsa.daq().start_readout(1,0x1)
+			pix,mem = mapsa.daq().read_data(rbuffer)
+			for p in pix:
+				p.pop(0)
+				p.pop(0)
 
-			pix,mem = mpa[mpa_index].daq().read_data(rbuffer,dcindex=1)
-			pix.pop(0)
-			pix.pop(0)
-			for m in mem:
-				print m
-			print pix
-			read = a._hw.getNode("Control").getNode("Sequencer").getNode("buffers_num").read()
-			a._hw.dispatch()
-			print "filled buffers " + str(read) 	
-			print ""
-			print ""
-
-
+				print p
+			
 			shutters+=1
 			print "Total shutters "+str(shutters)
      			if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
@@ -347,7 +318,10 @@ if options.setting == 'testing':
 				print "Ending loop"
         			break
 
+c2 = TCanvas('c2', '', 700, 600)
 
+quickplot.Draw('colz')
+c2.Print('plots/quickplot.root', 'root')
 
 print ""
 print "Done"
