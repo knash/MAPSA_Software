@@ -1,20 +1,38 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <node id="Glib" address="0x40000000">
 	<node id="Control">
-    		<node id="logic_reset"            		address="0x00000000" mask="0x00000001"   permission="w"    />
-    		<node id="firm_ver"            		address="0x00000000" mask="0xFFFF0000"   permission="r"    />
-    		<node id="strip_phase"		    	address="0x00000001"  mask="0x000001FF"  permission="rw"    />
+    		<node id="logic_reset"            		address="0x00000000"  mask="0x00000001"   permission="w"    />
+    		<node id="firm_ver"            			address="0x00000000"  mask="0xFFFF0000"   permission="r"    />
+    		<node id="strip_phase"		    		address="0x00000001"  mask="0x000001FF"  permission="rw"    />
     		<node id="MPA_clock_enable"		    	address="0x00000002"  mask="0x00000001"  permission="rw"    />
     		<node id="testbeam_mode"		    	address="0x00000002"  mask="0x00000002"  permission="rw"    />
-    		<node id="trigger_counter"		    	address="0x00000004"  mask="0x000003FF"  permission="rw"    />
-		<node id="trigger_offset_BEAM"		    	address="0x0000A000"  mask="0xFFFFFFFF" mode="incremental" size="0x400"  permission="rw"    />
-		<node id="trigger_offset_MPA"		    	address="0x0000A400"  mask="0xFFFFFFFF" mode="incremental" size="0x400"  permission="rw"    />
+    		<node id="testbeam_clock"		    	address="0x00000002"  mask="0x00000004"  permission="rw"    />
+    		<node id="total_triggers"            		address="0x00000003"  mask="0x0000FFFFF"   permission="r"    />
+    		<node id="trigger_counter"		    	address="0x00000008"     >
+				<node id="buffer_1"            		address="0x00000000"  mask="0x000007FF"  permission="r"    />
+				<node id="buffer_2"            		address="0x00000001"  mask="0x000007FF"  permission="r"    />
+				<node id="buffer_3"            		address="0x00000002"  mask="0x000007FF"  permission="r"    />
+				<node id="buffer_4"            		address="0x00000003"  mask="0x000007FF"  permission="r"    />
+    		</node>
+		<node id="trigger_offset_BEAM"		    	address="0x0000A000"  >
+				<node id="buffer_1"            		address="0x00000000" mode="incremental" size="0x800"   permission="r"    />
+    				<node id="buffer_2"            		address="0x00000800" mode="incremental" size="0x800"   permission="r"    />
+    				<node id="buffer_3"            		address="0x00001000" mode="incremental" size="0x800"   permission="r"    />
+    				<node id="buffer_4"            		address="0x00001800" mode="incremental" size="0x800"   permission="r"    />
+    		</node>
+		<node id="trigger_offset_MPA"		    	address="0x0000C000"  >
+				<node id="buffer_1"            		address="0x00000000" mode="incremental" size="0x800"   permission="r"    />
+    				<node id="buffer_2"            		address="0x00000800" mode="incremental" size="0x800"   permission="r"    />
+    				<node id="buffer_3"            		address="0x00001000" mode="incremental" size="0x800"   permission="r"    />
+    				<node id="buffer_4"            		address="0x00001800" mode="incremental" size="0x800"   permission="r"    />
+    		</node>
     		<node id="Sequencer" address="0x00000080">
     			<node id="calibration"         			mask="0x00000001"  permission="rw"    />
     			<node id="readout"           			mask="0x00000002"  permission="rw"    />
     			<node id="buffers_index"    			mask="0x0000000C"  permission="rw"    />
     			<node id="datataking_continuous"    		mask="0x00000010"  permission="rw"    />
     			<node id="buffers_num"    			mask="0x000000E0"  permission="r"    />
+    			<node id="spill"    			mask="0x00000100"  permission="r"    />
     			<node id="busy"    				mask="0x80000000"  permission="r"    />
     		</node>
 	</node>
@@ -95,42 +113,42 @@
     		<node id="OutConf_address"          	address="0x00006004" mask="0x00007FFF"   permission="r"    />
 
     		<node id="Memory_DataConf"            	address="0x00006400"   >
-    			<node id="MPA6"            			address="0x00000000"   >
+    			<node id="MPA1"            			address="0x00000000"   >
     				<node id="config_1"            			address="0x00000000" mode="incremental" size="0x19"   permission="rw"    />
     				<node id="config_2"            			address="0x000000C0" mode="incremental" size="0x19"   permission="rw"    />
     				<node id="config_3"            			address="0x00000180" mode="incremental" size="0x19"   permission="rw"    />
     				<node id="config_4"            			address="0x00000240" mode="incremental" size="0x19"   permission="rw"    />
     				<node id="config_5"            			address="0x00000300" mode="incremental" size="0x19"   permission="rw"    />
 			</node>
-    			<node id="MPA5"            			address="0x00000020"     >
+    			<node id="MPA2"            			address="0x00000020"     >
     				<node id="config_1"            			address="0x00000000" mode="incremental" size="0x19"   permission="rw"    />
     				<node id="config_2"            			address="0x000000C0" mode="incremental" size="0x19"   permission="rw"    />
     				<node id="config_3"            			address="0x00000180" mode="incremental" size="0x19"   permission="rw"    />
     				<node id="config_4"            			address="0x00000240" mode="incremental" size="0x19"   permission="rw"    />
     				<node id="config_5"            			address="0x00000300" mode="incremental" size="0x19"   permission="rw"    />
 			</node>
-    			<node id="MPA4"            			address="0x00000040"     >
+    			<node id="MPA3"            			address="0x00000040"     >
     				<node id="config_1"            			address="0x00000000" mode="incremental" size="0x19"   permission="rw"    />
     				<node id="config_2"            			address="0x000000C0" mode="incremental" size="0x19"   permission="rw"    />
     				<node id="config_3"            			address="0x00000180" mode="incremental" size="0x19"   permission="rw"    />
     				<node id="config_4"            			address="0x00000240" mode="incremental" size="0x19"   permission="rw"    />
     				<node id="config_5"            			address="0x00000300" mode="incremental" size="0x19"   permission="rw"    />
 			</node>
-    			<node id="MPA3"            			address="0x00000060"    >
+    			<node id="MPA4"            			address="0x00000060"    >
     				<node id="config_1"            			address="0x00000000" mode="incremental" size="0x19"   permission="rw"    />
     				<node id="config_2"            			address="0x000000C0" mode="incremental" size="0x19"   permission="rw"    />
     				<node id="config_3"            			address="0x00000180" mode="incremental" size="0x19"   permission="rw"    />
     				<node id="config_4"            			address="0x00000240" mode="incremental" size="0x19"   permission="rw"    />
     				<node id="config_5"            			address="0x00000300" mode="incremental" size="0x19"   permission="rw"    />
 			</node>
-    			<node id="MPA2"            			address="0x00000080"   >
+    			<node id="MPA5"            			address="0x00000080"   >
     				<node id="config_1"            			address="0x00000000" mode="incremental" size="0x19"   permission="rw"    />
     				<node id="config_2"            			address="0x000000C0" mode="incremental" size="0x19"   permission="rw"    />
     				<node id="config_3"            			address="0x00000180" mode="incremental" size="0x19"   permission="rw"    />
     				<node id="config_4"            			address="0x00000240" mode="incremental" size="0x19"   permission="rw"    />
     				<node id="config_5"            			address="0x00000300" mode="incremental" size="0x19"   permission="rw"    />
 			</node>
-    			<node id="MPA1"            			address="0x000000A0"    >
+    			<node id="MPA6"            			address="0x000000A0"    >
     				<node id="config_1"            			address="0x00000000" mode="incremental" size="0x19"   permission="rw"    />
     				<node id="config_2"            			address="0x000000C0" mode="incremental" size="0x19"   permission="rw"    />
     				<node id="config_3"            			address="0x00000180" mode="incremental" size="0x19"   permission="rw"    />
@@ -140,42 +158,42 @@
     		</node>
 
     		<node id="Memory_OutConf"            	address="0x00006800"   >
-    			<node id="MPA6"            			address="0x00000000"    >
+    			<node id="MPA1"            			address="0x00000000"    >
     				<node id="config_1"            			address="0x00000000" mode="incremental" size="0x19"   permission="r"    />
     				<node id="config_2"            			address="0x000000C0" mode="incremental" size="0x19"   permission="r"    />
     				<node id="config_3"            			address="0x00000180" mode="incremental" size="0x19"   permission="r"    />
     				<node id="config_4"            			address="0x00000240" mode="incremental" size="0x19"   permission="r"    />
     				<node id="config_5"            			address="0x00000300" mode="incremental" size="0x19"   permission="r"    />
 			</node>
-    			<node id="MPA5"            			address="0x00000020"   >
+    			<node id="MPA2"            			address="0x00000020"   >
     				<node id="config_1"            			address="0x00000000" mode="incremental" size="0x19"   permission="r"    />
     				<node id="config_2"            			address="0x000000C0" mode="incremental" size="0x19"   permission="r"    />
     				<node id="config_3"            			address="0x00000180" mode="incremental" size="0x19"   permission="r"    />
     				<node id="config_4"            			address="0x00000240" mode="incremental" size="0x19"   permission="r"    />
     				<node id="config_5"            			address="0x00000300" mode="incremental" size="0x19"   permission="r"    />
 			</node>
-    			<node id="MPA4"            			address="0x00000040"    >
+    			<node id="MPA3"            			address="0x00000040"    >
     				<node id="config_1"            			address="0x00000000" mode="incremental" size="0x19"   permission="r"    />
     				<node id="config_2"            			address="0x000000C0" mode="incremental" size="0x19"   permission="r"    />
     				<node id="config_3"            			address="0x00000180" mode="incremental" size="0x19"   permission="r"    />
     				<node id="config_4"            			address="0x00000240" mode="incremental" size="0x19"   permission="r"    />
     				<node id="config_5"            			address="0x00000300" mode="incremental" size="0x19"   permission="r"    />
 			</node>
-    			<node id="MPA3"            			address="0x00000060"   >
+    			<node id="MPA4"            			address="0x00000060"   >
     				<node id="config_1"            			address="0x00000000" mode="incremental" size="0x19"   permission="r"    />
     				<node id="config_2"            			address="0x000000C0" mode="incremental" size="0x19"   permission="r"    />
     				<node id="config_3"            			address="0x00000180" mode="incremental" size="0x19"   permission="r"    />
     				<node id="config_4"            			address="0x00000240" mode="incremental" size="0x19"   permission="r"    />
     				<node id="config_5"            			address="0x00000300" mode="incremental" size="0x19"   permission="r"    />
 			</node>
-    			<node id="MPA2"            			address="0x00000080"   >
+    			<node id="MPA5"            			address="0x00000080"   >
     				<node id="config_1"            			address="0x00000000" mode="incremental" size="0x19"   permission="r"    />
     				<node id="config_2"            			address="0x000000C0" mode="incremental" size="0x19"   permission="r"    />
     				<node id="config_3"            			address="0x00000180" mode="incremental" size="0x19"   permission="r"    />
     				<node id="config_4"            			address="0x00000240" mode="incremental" size="0x19"   permission="r"    />
     				<node id="config_5"            			address="0x00000300" mode="incremental" size="0x19"   permission="r"    />
 			</node>
-    			<node id="MPA1"            			address="0x000000A0"    >
+    			<node id="MPA6"            			address="0x000000A0"    >
     				<node id="config_1"            			address="0x00000000" mode="incremental" size="0x19"   permission="r"    />
     				<node id="config_2"            			address="0x000000C0" mode="incremental" size="0x19"   permission="r"    />
     				<node id="config_3"            			address="0x00000180" mode="incremental" size="0x19"   permission="r"    />
@@ -225,18 +243,46 @@
 			</node>
 		</node>
 		<node id="Counter">
-    			<node id="MPA1"            		address="0x00009800"  mode="incremental" size="0x19"   permission="r"     />
-    			<node id="MPA2"            		address="0x00009820"  mode="incremental" size="0x19"   permission="r"    />
-    			<node id="MPA3"            		address="0x00009840"  mode="incremental" size="0x19"   permission="r"    />
-    			<node id="MPA4"            		address="0x00009860"  mode="incremental" size="0x19"   permission="r"    />
-    			<node id="MPA5"            		address="0x00009880"  mode="incremental" size="0x19"   permission="r"    />
-    			<node id="MPA6"            		address="0x000098A0"  mode="incremental" size="0x19"   permission="r"    />
-
+    			<node id="MPA1"            		address="0x00009800"   >
+    				<node id="buffer_1"            		address="0x00000000" mode="incremental" size="0x19"   permission="r"    />
+    				<node id="buffer_2"            		address="0x00000100" mode="incremental" size="0x19"   permission="r"    />
+    				<node id="buffer_3"            		address="0x00000200" mode="incremental" size="0x19"   permission="r"    />
+    				<node id="buffer_4"            		address="0x00000300" mode="incremental" size="0x19"   permission="r"    />
+			</node>
+    			<node id="MPA2"            		address="0x00009820"   >
+    				<node id="buffer_1"            		address="0x00000000" mode="incremental" size="0x19"   permission="r"    />
+    				<node id="buffer_2"            		address="0x00000100" mode="incremental" size="0x19"   permission="r"    />
+    				<node id="buffer_3"            		address="0x00000200" mode="incremental" size="0x19"   permission="r"    />
+    				<node id="buffer_4"            		address="0x00000300" mode="incremental" size="0x19"   permission="r"    />
+			</node>
+    			<node id="MPA3"            		address="0x00009840"   >
+    				<node id="buffer_1"            		address="0x00000000" mode="incremental" size="0x19"   permission="r"    />
+    				<node id="buffer_2"            		address="0x00000100" mode="incremental" size="0x19"   permission="r"    />
+    				<node id="buffer_3"            		address="0x00000200" mode="incremental" size="0x19"   permission="r"    />
+    				<node id="buffer_4"            		address="0x00000300" mode="incremental" size="0x19"   permission="r"    />
+			</node> 
+   			<node id="MPA4"            		address="0x00009860"   >
+    				<node id="buffer_1"            		address="0x00000000" mode="incremental" size="0x19"   permission="r"    />
+    				<node id="buffer_2"            		address="0x00000100" mode="incremental" size="0x19"   permission="r"    />
+    				<node id="buffer_3"            		address="0x00000200" mode="incremental" size="0x19"   permission="r"    />
+    				<node id="buffer_4"            		address="0x00000300" mode="incremental" size="0x19"   permission="r"    />
+			</node>
+    			<node id="MPA5"            		address="0x00009880"   >
+    				<node id="buffer_1"            		address="0x00000000" mode="incremental" size="0x19"   permission="r"    />
+    				<node id="buffer_2"            		address="0x00000100" mode="incremental" size="0x19"   permission="r"    />
+    				<node id="buffer_3"            		address="0x00000200" mode="incremental" size="0x19"   permission="r"    />
+    				<node id="buffer_4"            		address="0x00000300" mode="incremental" size="0x19"   permission="r"    />
+			</node>
+    			<node id="MPA6"            		address="0x000098A0"   >
+    				<node id="buffer_1"            		address="0x00000000" mode="incremental" size="0x19"   permission="r"    />
+    				<node id="buffer_2"            		address="0x00000100" mode="incremental" size="0x19"   permission="r"    />
+    				<node id="buffer_3"            		address="0x00000200" mode="incremental" size="0x19"   permission="r"    />
+    				<node id="buffer_4"            		address="0x00000300" mode="incremental" size="0x19"   permission="r"    />
+			</node>
 		</node>
     		<node id="busy"        			address="0x00009C00" mask="0x80000000"   permission="r"   />
     		<node id="buffer_num"        		address="0x00009C00" mask="0x00000006"   permission="rw"   />
     		<node id="memory_readout"        		address="0x00009C00" mask="0x00000001"   permission="rw"   />
     		<node id="CLKOR_freq_divide"        	address="0x00009C02" mask="0x0000000F"   permission="rw"   />
 	</node>
-
 </node>

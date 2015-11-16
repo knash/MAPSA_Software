@@ -54,41 +54,25 @@ class MPA_daq:
 
 
 	def read_raw(self,buffer_num,dcindex):
-		print "dcindex " +str(dcindex)
-		counter_data  = self._counter.getNode("MPA"+str(dcindex)).readBlock(25)
-		counter_data1  = self._counter.getNode("MPA1").readBlock(25)
-		counter_data2  = self._counter.getNode("MPA2").readBlock(25)
-		counter_data3  = self._counter.getNode("MPA3").readBlock(25)
-		counter_data4  = self._counter.getNode("MPA4").readBlock(25)
-		counter_data5  = self._counter.getNode("MPA5").readBlock(25)
-		counter_data6  = self._counter.getNode("MPA6").readBlock(25)
-		memory_data = self._memory.getNode("MPA"+str(self._nmpa)).getNode("buffer_"+str(buffer_num)).readBlock(216)
 
+		counter_data  = self._counter.getNode("MPA"+str(dcindex)).getNode("buffer_"+str(buffer_num)).readBlock(25)
+		memory_data = self._memory.getNode("MPA"+str(self._nmpa)).getNode("buffer_"+str(buffer_num)).readBlock(216)
 		self._hw.dispatch()
 		self._waitreadout()
-		print "MPA1 "
-		print counter_data1
-		print 
-		print "MPA2 "
-		print counter_data2
-		print 
-		print "MPA3 "
-		print counter_data3
-		print 
-		print "MPA4 "
-		print counter_data4
-		print 
-		print "MPA5 "
-		print counter_data5
-		print 
-		print "MPA6 "
-		print counter_data6
+
 
 		return [memory_data,counter_data]
 
-	def read_data(self,buffer_num,dcindex=-1):
+	def read_data(self,buffer_num,tb=0,dcindex=-1):
+
 		if dcindex==-1:
 			dcindex=self._nmpa
+		eshift = 0
+		if tb:
+			eshift =self._nmpa
+		else:
+			eshift = self._nmpa-2
+
 		(memory_data,counter_data)= self.read_raw(buffer_num,dcindex)
 
 		#print memory_data
@@ -96,13 +80,30 @@ class MPA_daq:
 		pix = [None]*50
 		mem = [None]*96
 		for x in range(0,25):
+				
+			shift1 = int(5+3 - eshift)
+			shift2 = int(5+19 - eshift)
 
-			pix[2*x]  = int((counter_data[x] >> 3) & 0xffff)
-			pix[2*x+1]= int((counter_data[x] >> 19) & 0xffff)
+			#if counter_data[x]!=0 and self._nmpa==5:
+			#	print "mpa " + str(self._nmpa)
+			#	print "pre"
+			#	print str(hex_to_binary(frmt(int(counter_data[x]))))
+			pix[2*x]  = int((counter_data[x] >> shift1) & 0xffff)
+			pix[2*x+1]= int((counter_data[x] >> shift2) & 0xffff)
 
-		memory_string = '';
+			#if counter_data[x]!=0 and self._nmpa==5:
+		#		print "post"
+		#		print str(hex_to_binary(frmt(pix[2*x])))
+		#		print str(hex_to_binary(frmt(pix[2*x+1])))
+			#print pix[2*x]
+			#print pix[2*x+1]
+		memory_string = ''
+		#print memory_data
 		for x in range(0,216):
+			#print memory_data[216 - x]
 			memory_string = memory_string + str(hex_to_binary(frmt(memory_data[215 - x])))
+	#	if self._nmpa == 1:
+	#		print memory_string
 		for x in range(0,96):
 			mem[x] = memory_string [x*72 : x*72+72]			
 
@@ -112,7 +113,7 @@ class MPA_daq:
 ##############UNEDITED			
 
 
-	def read_memory(self, mem,mode):
+	def read_memory(self, mem,mode,tb=0):
 
 		memory = np.array(mem)
 		BX = []
@@ -157,15 +158,29 @@ class MPA_daq:
 			data = [row, bend, col]
 		
 		if (mode == 3):
+
 			for x in range(0,96):
-				if (memory[x][0:8] == '00000000'):
+				if tb: 
+					memory[x] = memory[x][2:72]
+				if (memory[x][0:5] == '00000'):
 					break
-				BX.append(int(memory[x][8:24],2))
-				hit.append(memory [x][24:72])			
-			
-			hit = filter(lambda a: a!=0, hit)
-			data = hit		
+				#print memory[x]
+				#print memory[x][0:5]
+				#print memory[x][5:21]
+				#print memory[x][21:69]
+				#print 
+				#print 
+				BX.append(int(memory[x][5:21],2))
+				hit.append(memory [x][21:69])		
 		
+			
+			#print hit
+			hit = filter(lambda a: a!=0, hit)
+			data = hit	
+			#print data	
+			
+
+			#print 
 		BX = filter(lambda a: a!=0, BX)		
 		return BX, data	
 			

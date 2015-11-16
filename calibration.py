@@ -22,17 +22,21 @@ default	=	70,
 dest	=	'charge',
 help	=	'Charge for caldac')
 parser.add_option('-n', '--number', metavar='F', type='int', action='store',
-default	=	2000,
+default	=	1200,
 dest	=	'number',
 help	=	'number of calstrobe pulses to send')
-parser.add_option('-m', '--mpa', metavar='F', type='int', action='store',
-default	=	0,
-dest	=	'mpa',
-help	=	'mpa to configure (0 for all)')
+
 parser.add_option('-r', '--res', metavar='F', type='int', action='store',
 default	=	1,
 dest	=	'res',
 help	=	'resolution 1,2,3... 1 is best')
+
+parser.add_option('-y', '--string ', metavar='F', type='string', action='store',
+default	=	'',
+dest	=	'string',
+help	=	'extra string')
+
+
 (options, args) = parser.parse_args()
 
 
@@ -42,6 +46,14 @@ mapsa = MAPSA(a)
 read = a._hw.getNode("Control").getNode('firm_ver').read()
 a._hw.dispatch()
 print "Running firmware version " + str(read)
+
+
+a._hw.getNode("Control").getNode("logic_reset").write(0x1)
+a._hw.dispatch()
+a._hw.getNode("Control").getNode("MPA_clock_enable").write(0x1)
+a._hw.dispatch()
+
+
 
 smode = 0x1
 sdur = 0xFFFFFFF
@@ -53,9 +65,9 @@ sdur = 0xFFFFFFF
 
 
 snum = options.number
-sdel = 0xFFF
-slen = 0xF
-sdist = 0x50
+sdel = 0x4
+slen = 0x5
+sdist = 0xF
 
 
 
@@ -63,8 +75,8 @@ dcindex=1
 
 buffnum=1
 
-mpa_number = options.mpa
-mpa_index = mpa_number-1
+
+
 	
 mpa = []  
 for i in range(1,7):
@@ -75,252 +87,107 @@ Confnum=1
 configarr = []
 
 CE=0
-SP=1
+SP=0
 
 
-if options.mpa==0:
-
-	config = mapsa.config(Config=1,string='default')
-	config.upload()
 
 
-	config.modifyperiphery('OM',[3]*6)
-	config.modifyperiphery('RT',[0]*6)
-	config.modifyperiphery('SCW',[0]*6)
-	config.modifyperiphery('SH2',[0]*6)
-	config.modifyperiphery('SH1',[0]*6)
-	config.modifyperiphery('THDAC',[0]*6)
-	config.modifyperiphery('CALDAC', [options.charge]*6)
-	for x in range(1,25):
-		config.modifypixel(x,'PML', [1]*6)
-		config.modifypixel(x,'ARL', [1]*6)
-		config.modifypixel(x,'CEL', [CE]*6)
-		config.modifypixel(x,'CW', [0]*6)
-		config.modifypixel(x,'PMR', [1]*6)
-		config.modifypixel(x,'ARR', [1]*6)
-		config.modifypixel(x,'CER', [CE]*6)
-		config.modifypixel(x,'SP',  [SP]*6) 
-		config.modifypixel(x,'SR',  [1]*6) 
+config = mapsa.config(Config=1,string='default')
+config.upload()
 
 
-	config.write()
-
-else:
-	curconf = mpa[mpa_index].config(xmlfile="data/Conf_default_MPA"+str(mpa_number)+"_config1.xml")
-	curconf.modifyperiphery('OM',3)
-	curconf.modifyperiphery('RT',0)
-	curconf.modifyperiphery('SCW',0)
-	curconf.modifyperiphery('SH2',0)
-	curconf.modifyperiphery('SH1',0)
-	curconf.modifyperiphery('THDAC',0)
-	curconf.modifyperiphery('CALDAC', options.charge)
-	for x in range(1,25):
-		curconf.modifypixel(x,'PML', 1)
-		curconf.modifypixel(x,'ARL', 1)
-		curconf.modifypixel(x,'CEL', CE)
-		curconf.modifypixel(x,'CW', 0)
-		curconf.modifypixel(x,'PMR', 1)
-		curconf.modifypixel(x,'ARR', 1)
-		curconf.modifypixel(x,'CER', CE)
-		curconf.modifypixel(x,'SP',  SP) 
-		curconf.modifypixel(x,'SR',  1) 
-
-
-	curconf.upload(dcindex=1)
-
+config.modifyperiphery('OM',[3]*6)
+config.modifyperiphery('RT',[0]*6)
+config.modifyperiphery('SCW',[0]*6)
+config.modifyperiphery('SH2',[0]*6)
+config.modifyperiphery('SH1',[0]*6)
+config.modifyperiphery('THDAC',[0]*6)
+config.modifyperiphery('CALDAC', [options.charge]*6)
+for x in range(1,25):
+	config.modifypixel(x,'PML', [1]*6)
+	config.modifypixel(x,'ARL', [1]*6)
+	config.modifypixel(x,'CEL', [CE]*6)
+	config.modifypixel(x,'CW', [0]*6)
+	config.modifypixel(x,'PMR', [1]*6)
+	config.modifypixel(x,'ARR', [1]*6)
+	config.modifypixel(x,'CER', [CE]*6)
+	config.modifypixel(x,'SP',  [SP]*6) 
+	config.modifypixel(x,'SR',  [1]*6) 
+config.write()
 
 
 mapsa.daq().Strobe_settings(snum,sdel,slen,sdist)
 x1 = array('d')
 y1 = []
 for x in range(0,256):
-			if x%options.res!=0:
-				continue
-			if x%10==0:
-				print "THDAC " + str(x)
-			if options.mpa==0:
-				config.modifyperiphery('THDAC',[x]*6)
-				config.upload()
-				config.write()
-			else:
+	if x%options.res!=0:
+		continue
+	if x%10==0:
+		print "THDAC " + str(x)
 
-				curconf.modifyperiphery('THDAC',x)
-				curconf.upload(dcindex=1)
+	config.modifyperiphery('THDAC',[x]*6)
+	config.upload()
+	config.write()
 
+	mapsa.daq().Shutter_open(smode,sdur)
+	mapsa.daq().start_readout(1,0x0)
 
+	pix,mem = mapsa.daq().read_data(buffnum,tb=0)
+	ipix=0
+	for p in pix:
 
-			#mapsa.daq().daqloop(shutterdur=0,calib=1,data_continuous=0,read=0,buffers=buffnum,testbeamclock=0)
+			p.pop(0)
+			p.pop(0)
+			y1.append([])
+			y1[ipix].append(array('d',p))
 
-			mapsa.daq().Shutter_open(smode,sdur)
-			mapsa.daq().start_readout(1,0x0)
-			if options.mpa==0:
-				pix,mem = mapsa.daq().read_data(buffnum)
-				ipix=0
-				for p in pix:
-
-					p.pop(0)
-					p.pop(0)
-					print p
-					y1.append([])
-					y1[ipix].append(array('d',p))
-
-					ipix+=1
-				x1.append(x)
-			else:
-				pix,mem = mpa[mpa_index].daq().read_data(buffnum,dcindex=1)
-
-				pix.pop(0)
-				pix.pop(0)
-
-				x1.append(x)
-				y1.append(array('d',pix))
+			ipix+=1
+	x1.append(x)
 	
-			time.sleep(0.001)
-			
-	
-#print x1
-#print y1
+print "Generating nominal per pixel trimdac values"
 
-if options.mpa==0:
-
-	print "Generating nominal per pixel trimdac values"
-
-	calibconfs = config._confs
-	calibconfsxmlroot = config._confsxmlroot
+calibconfs = config._confs
+calibconfsxmlroot = config._confsxmlroot
 
 		
-	c1 = TCanvas('c1', '', 700, 900)
-	c1.Divide(2,3)
-	#gr1 = []
-	xvec =  np.array(x1)
-	thdacvv = []
-	yarrv = []
-	for i in range(0,6):
-		calibconfxmlroot	=	calibconfsxmlroot[i]
-		
-		c1.cd(i+1)
-		thdacv = []
-		yarr =  np.array(y1[i])
-		gr1 = []
-		yarrv.append(yarr)
-		for iy1 in range(0,len(yarr[0,:])-1):
-			yvec = yarr[:,iy1]
-
-			gr1.append(TGraph(len(x1)-1,array('d',xvec),array('d',yvec)))
-			if iy1==0:
-				gr1[iy1].SetTitle(';DAC Value (1.456 mV);Counts (1/1.456)')
-				gr1[iy1].Draw()
-
-			else:
-				gr1[iy1].Draw('same')
-				gPad.Update()
-
-
-
-			halfmax = max(yvec)/2.0
-			maxbin = np.where(yvec==max(yvec))
-			if max(yvec)<1000:
-				print iy1
-			for ibin in range(0,len(xvec)-1):
-
-				xval = xvec[ibin]
-				xval1 = xvec[ibin+1]
-				yval = yvec[ibin]
-				yval1 = yvec[ibin+1]
+c1 = TCanvas('c1', '', 700, 900)
+c1.Divide(2,3)
+#gr1 = []
+xvec =  np.array(x1)
+thdacvv = []
+yarrv = []
+grarr = []
+for i in range(0,6):
+	backup=TFile("plots/backup_preCalibration_"+options.string+"_MPA"+str(i)+".root","recreate")
+	calibconfxmlroot	=	calibconfsxmlroot[i]
 	
-				if yval1-halfmax<0.0 and ibin>maxbin[0][0]:
-					if iy1%2==0:
-						prev_trim = int(calibconfxmlroot[(iy1)/2+1].find('TRIMDACL').text)
-					else:
-						prev_trim = int(calibconfxmlroot[(iy1+1)/2].find('TRIMDACR').text)
-
-					if abs(yval-halfmax)<(yval1-halfmax):
-						xdacval = xval
-					else:
-						xdacval = xval1
-					trimdac = int(31) + prev_trim - int(xdacval*1.456/3.75)
-					#print trimdac
-					
-
-					thdacv.append(trimdac)
-					break	
-				if ibin==len(xvec)-2:
-					if iy1%2==0:
-						prev_trim = int(calibconfxmlroot[(iy1)/2+1].find('TRIMDACL').text)
-					else:
-						prev_trim = int(calibconfxmlroot[(iy1+1)/2].find('TRIMDACR').text)
-	
-					trimdac = int(prev_trim)
-					thdacv.append(trimdac)
-					break
-		
-		thdacvv.append(thdacv)
-
-
-	print thdacvv
-	thdacvvorg = []
-	for iy1 in range(0,len(yarrv[0][0,:])-1):
-		thdacvvorg.append(thdacvv[:,iy1])
-		upldac = []
-		for i in range(0,6):
-			thdacv = thdacvv[i]
-			range1 = min(thdacv)	
-			range2 = max(thdacv)	
-			offset =int(15-(range1+range2)*0.5)
-			upldac.append(thdacv[iy1]+offset)
-
-			#	thadacval = 
-		if iy1%2==0:
-			calibconf.modifypixel((iy1)/2+1,'TRIMDACL',max(0,upldac[iy1]))
-		else:
-			calibconf.modifypixel((iy1+1)/2,'TRIMDACR',max(0,upldac[iy1]))
-
-#print thdacv
-
-	c1.Print('plots/Scurve_Calibration_pre.root', 'root')
-	c1.Print('plots/Scurve_Calibration_pre.pdf', 'pdf')
-	c1.Print('plots/Scurve_Calibration_pre.png', 'png')
-
-
-
-
-
-
-else:
-	print "Generating nominal per pixel trimdac values"
-	calibconf = mpa[mpa_index].config(xmlfile="data/Conf_default_MPA"+str(mpa_number)+"_config1.xml")
-	calibconfxmlroot = mpa[mpa_index].config(xmlfile="data/Conf_default_MPA"+str(mpa_number)+"_config1.xml").xmlroot
+	c1.cd(i+1)
 	thdacv = []
-	#gr1 = []
-	xvec =  np.array(x1)
-	yarr =  np.array(y1)
+	yarr =  np.array(y1[i])
+	grarr.append([])
 	gr1 = []
-	c1 = TCanvas('c1', '', 700, 600)
-	for iy1 in range(0,len(yarr[0,:])-1):
+	yarrv.append(yarr)
+	for iy1 in range(0,len(yarr[0,:])):
 		yvec = yarr[:,iy1]
-
+		if max(yvec)==0:
+			print "zero"
 		gr1.append(TGraph(len(x1)-1,array('d',xvec),array('d',yvec)))
 		if iy1==0:
+			
 			gr1[iy1].SetTitle(';DAC Value (1.456 mV);Counts (1/1.456)')
-			gr1[iy1].Draw()
-
+			grarr[i].append(gr1[iy1])
+			grarr[i][iy1].Draw()
+			gr1[iy1].Write(str(iy1))
 		else:
-			gr1[iy1].Draw('same')
+			grarr[i].append(gr1[iy1])
+			grarr[i][iy1].Draw('same')
+			gr1[iy1].Write(str(iy1))
 			gPad.Update()
 
-
-		#print xvec
-		#print yvec
-		#plt.plot(xvec,yvec, '-') 
-		#plt.xlabel('Threshold DAC Value')
-		#plt.ylabel('Counter Value')	
-		#plt.show()	
 
 
 		halfmax = max(yvec)/2.0
 		maxbin = np.where(yvec==max(yvec))
-		if max(yvec)<1000:
-			print iy1
 		for ibin in range(0,len(xvec)-1):
 
 			xval = xvec[ibin]
@@ -333,14 +200,16 @@ else:
 					prev_trim = int(calibconfxmlroot[(iy1)/2+1].find('TRIMDACL').text)
 				else:
 					prev_trim = int(calibconfxmlroot[(iy1+1)/2].find('TRIMDACR').text)
+				#print "ptrim " + str(prev_trim)
+				#print "halfmax " +  str(halfmax)
 
 				if abs(yval-halfmax)<(yval1-halfmax):
 					xdacval = xval
 				else:
 					xdacval = xval1
+				#print "xdacval " + str(xdacval)
 				trimdac = int(31) + prev_trim - int(xdacval*1.456/3.75)
 				#print trimdac
-					
 
 				thdacv.append(trimdac)
 				break	
@@ -349,117 +218,159 @@ else:
 					prev_trim = int(calibconfxmlroot[(iy1)/2+1].find('TRIMDACL').text)
 				else:
 					prev_trim = int(calibconfxmlroot[(iy1+1)/2].find('TRIMDACR').text)
-
+	
 				trimdac = int(prev_trim)
 				thdacv.append(trimdac)
 				break
-	range1 = min(thdacv)	
-	range2 = max(thdacv)	
-	offset =int(15-(range1+range2)*0.5)
-
-	for iy1 in range(0,len(yarr[0,:])-1):
-				if iy1%2==0:
-
-					calibconf.modifypixel((iy1)/2+1,'TRIMDACL',max(0,thdacv[iy1]+offset))
-				else:
-					calibconf.modifypixel((iy1+1)/2,'TRIMDACR',max(0,thdacv[iy1]+offset))
-
-#print thdacv
-
-	c1.Print('plots/Scurve_Calibration_pre.root', 'root')
-	c1.Print('plots/Scurve_Calibration_pre.pdf', 'pdf')
-	c1.Print('plots/Scurve_Calibration_pre.png', 'png')
+		
+	thdacvv.append(thdacv)
 
 
 
+thdacvvorg = []
+for iy1 in range(0,len(yarrv[0][0,:])):
+	thdacvvorg.append(np.array(thdacvv)[:,iy1])
+	upldac = []
+	for i in range(0,6):
+		thdacv = thdacvv[i]
+		range1 = min(thdacv)	
+		range2 = max(thdacv)	
+		offset =int(15-(range1+range2)*0.5)
+		upldac.append(thdacv[iy1]+offset)
+
+			#	thadacval =
+	for u in range(0,len(upldac)):
+		upldac[u] = max(0,upldac[u])
+
+	if iy1%2==0:
+		config.modifypixel((iy1)/2+1,'TRIMDACL',max(0,upldac ))
+	else:
+		config.modifypixel((iy1+1)/2,'TRIMDACR',max(0,upldac ))
 
 
-xmlrootfile = calibconf.xmltree
-print "writing data/Conf_calibrated_MPA"+str(mpa_number)+"_config1.xml"
-xmlrootfile.write("data/Conf_calibrated_MPA"+str(mpa_number)+"_config1.xml")
+c1.Print('plots/Scurve_Calibration'+options.string+'_pre.root', 'root')
+c1.Print('plots/Scurve_Calibration'+options.string+'_pre.pdf', 'pdf')
+c1.Print('plots/Scurve_Calibration'+options.string+'_pre.png', 'png')
+
+for i in range(0,6):
+	xmlrootfile = config._confsxmltree[i]
+	print xmlrootfile
+	a = config._confsxmlroot[i]
+	print a[17].find('TRIMDACL').text
+	print "writing data/Conf_calibrated_MPA"+str(i+1)+"_config1.xml"
+	xmlrootfile.write("data/Conf_calibrated_MPA"+str(i+1)+"_config1.xml")
+
+
 print "Testing Calibration"
 
-curconf1 = mpa[mpa_index].config(xmlfile="data/Conf_calibrated_MPA"+str(mpa_number)+"_config1.xml")
-curconf1.upload(dcindex=1)
 
-curconf1.modifyperiphery('OM',3)
-curconf1.modifyperiphery('RT',0)
-curconf1.modifyperiphery('SCW',0)
-curconf1.modifyperiphery('SH2',0)
-curconf1.modifyperiphery('SH1',0)
-curconf1.modifyperiphery('THDAC',0)
-curconf1.modifyperiphery('CALDAC', options.charge)
+config1 = mapsa.config(Config=1,string='calibrated')
+config1.upload()
+
+config1.modifyperiphery('OM',[3]*6)
+config1.modifyperiphery('RT',[0]*6)
+config1.modifyperiphery('SCW',[0]*6)
+config1.modifyperiphery('SH2',[0]*6)
+config1.modifyperiphery('SH1',[0]*6)
+config1.modifyperiphery('THDAC',[0]*6)
+config1.modifyperiphery('CALDAC', [options.charge]*6)
 for x in range(1,25):
-		curconf1.modifypixel(x,'PML', 1)
-		curconf1.modifypixel(x,'ARL', 1)
-		curconf1.modifypixel(x,'CEL', CE)
-		curconf1.modifypixel(x,'CW', 0)
-		curconf1.modifypixel(x,'PMR', 1)
-		curconf1.modifypixel(x,'ARR', 1)
-		curconf1.modifypixel(x,'CER', CE)
-		curconf1.modifypixel(x,'SP',  SP) 
-		curconf1.modifypixel(x,'SR',  0) 
-curconf1.upload(dcindex=1)
+	config1.modifypixel(x,'PML', [1]*6)
+	config1.modifypixel(x,'ARL', [1]*6)
+	config1.modifypixel(x,'CEL', [CE]*6)
+	config1.modifypixel(x,'CW', [0]*6)
+	config1.modifypixel(x,'PMR', [1]*6)
+	config1.modifypixel(x,'ARR', [1]*6)
+	config1.modifypixel(x,'CER', [CE]*6)
+	config1.modifypixel(x,'SP',  [SP]*6) 
+	config1.modifypixel(x,'SR',  [1]*6) 
+
+
+config1.write()
+
 
 x1 = array('d')
 y1 = []
-
 for x in range(0,256):
 			if x%options.res!=0:
 				continue
 			if x%10==0:
 				print "THDAC " + str(x)
 
-			curconf1.modifyperiphery('THDAC',x)
-			curconf1.upload(dcindex=1)
+			config1.modifyperiphery('THDAC',[x]*6)
+			config1.upload()
+			config1.write()
+	
+
+
 
 			#mapsa.daq().daqloop(shutterdur=0,calib=1,data_continuous=0,read=0,buffers=buffnum,testbeamclock=0)
-
 
 			mapsa.daq().Shutter_open(smode,sdur)
 			mapsa.daq().start_readout(1,0x0)
 
-			pix,mem = mpa[mpa_index].daq().read_data(buffnum,dcindex=1)
-			pix.pop(0)
-			pix.pop(0)
+			pix,mem = mapsa.daq().read_data(buffnum,tb=0)
+			ipix=0
+			for p in pix:
+
+				p.pop(0)
+				p.pop(0)
+				#print p
+				y1.append([])
+				y1[ipix].append(array('d',p))
+
+				ipix+=1
 			x1.append(x)
-			y1.append(array('d',pix))
-			#print pix
-			#print ""
+	
 			time.sleep(0.001)
+			
 	
 
 
+c2 = TCanvas('c2', '', 700, 900)
+c2.Divide(2,3)
+
 xvec =  np.array(x1)
-yarr =  np.array(y1)
-
+yarrv = []
+gr2arr = []
 #print xvec
-#print yarr
-gr2 = []
-c2 = TCanvas('c2', '', 700, 600)
-backup=TFile("backup.root","recreate")
-for iy1 in range(0,len(yarr[0,:])-1):
-		yvec = yarr[:,iy1]
+#print y1
+for i in range(0,6):
+		backup=TFile("plots/backup_postCalibration_"+options.string+"_MPA"+str(i)+".root","recreate")
+		
+		c2.cd(i+1)
+		yarr =  np.array(y1[i])
+		gr2arr.append([])
+		gr2 = []
+		yarrv.append(yarr)
+		for iy1 in range(0,len(yarr[0,:])):
+			yvec = yarr[:,iy1]
 
-		gr2.append(TGraph(len(x1)-1,array('d',xvec),array('d',yvec)))
-		if iy1==0:
-			gr2[iy1].SetTitle(';DAC Value (1.456 mV);Counts (1/1.456)')
-			gr2[iy1].Draw()
-			gr2[iy1].Write(str(iy1))
+			gr2.append(TGraph(len(x1)-1,array('d',xvec),array('d',yvec)))
+			if iy1==0:
 
-		else:
-			gr2[iy1].Draw('same')
-			gPad.Update()
-			gr2[iy1].Write(str(iy1))
+				gr2[iy1].SetTitle(';DAC Value (1.456 mV);Counts (1/1.456)')
+				gr2arr[i].append(gr2[iy1])
+				gr2arr[i][iy1].Draw()
+				gr2[iy1].Write(str(iy1))
+
+			else:
+				gr2arr[i].append(gr2[iy1])
+				gr2arr[i][iy1].Draw('same')
+				gr2[iy1].Write(str(iy1))
+				gPad.Update()
 
 
 
-c2.Print('plots/Scurve_Calibration_post.root', 'root')
-c2.Print('plots/Scurve_Calibration_post.pdf', 'pdf')
-c2.Print('plots/Scurve_Calibration_post.png', 'png')
+c2.Print('plots/Scurve_Calibration'+options.string+'_post.root', 'root')
+c2.Print('plots/Scurve_Calibration'+options.string+'_post.pdf', 'pdf')
+c2.Print('plots/Scurve_Calibration'+options.string+'_post.png', 'png')
 #c3 = TCanvas('c2', '', 700, 600)
 #gr2[4].Draw()
 #gPad.Update()
 #c3.Print('plots/test.pdf', 'pdf')
 print ""
 print "Done"
+
+
+

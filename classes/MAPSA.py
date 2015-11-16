@@ -15,8 +15,8 @@ class MAPSA:
 	def daq(self):
 		return MAPSA_daq( self._hw)
 
-	def config(self,Config=1,string ='default'):
-		return MAPSA_config( self._hw,Config=1,string='default')
+	def config(self,Config,string):
+		return MAPSA_config( self._hw,Config,string)
 
 	def _voltage_wait(self,supply,state):
 

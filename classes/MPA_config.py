@@ -30,7 +30,7 @@ class MPA_config:
 			time.sleep(0.001)
 			busy = self._Conf_busy.read()
 			self._hw.dispatch()
-			print busy
+			#print busy
 
 	def _get_pixel_fromfile(self, pixel):
 		val = 0
@@ -119,6 +119,18 @@ class MPA_config:
 
 
 		
+
+	def write(self):
+
+
+		self._hw.getNode("Configuration").getNode("mode").write(0x5)
+		self._hw.dispatch()
+		self._spi_wait()
+
+		#self._hw.getNode("Configuration").getNode("mode").write(self._nmpa)
+		#self._hw.dispatch()
+		#self._spi_wait()
+
 
 	def modifypixel(self, which, what, value):
 		pixel = self.xmlroot.findall('pixel')

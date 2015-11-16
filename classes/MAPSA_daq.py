@@ -36,7 +36,8 @@ class MAPSA_daq:
 		self._readbuff  = self._Readout.getNode("buffer_num")
 
     		self._clken = self._Control.getNode("MPA_clock_enable") 		  
-    		self._testbeam = self._Control.getNode("testbeam_mode") 		  
+    		self._testbeam = self._Control.getNode("testbeam_mode") 		
+    		self._testbeamclock = self._Control.getNode("testbeam_clock") 		    
 
 	def _waitreadout(self):
 		busyread = self._busyread.read()
@@ -92,13 +93,14 @@ class MAPSA_daq:
 		return 1
 
 
-	def calibrationpulse(self, npulse=128, length=50, dist=50, inidelay = 50):
+	def calibrationpulse(self, npulse=128, length=50, dist=50, inidelay = 50,sdur = 0 ):
 
 			
 		self._puls_num.write(npulse)  
 		self._puls_len.write(length)
 		self._puls_dist.write(dist)
 		self._puls_del.write(inidelay)
+		self._shuttertime.write(sdur)
 		self._hw.dispatch()
 		
 		time.sleep(0.001)
@@ -112,27 +114,6 @@ class MAPSA_daq:
 		
 		time.sleep(0.001)
 
-	def daqloop(self,shutterdur=10000,calib=0,data_continuous=0,read=1,buffers=1,testbeamclock=0):
-		cycle = (1000.0/320.0)
-
-		dur = int(round(shutterdur/cycle))
-		if float(dur) != shutterdur/cycle :
-			print "Using " +str(dur*cycle)+"ns instead of " + str(shutterdur)
-		if len(hex_to_binary(frmt(dur)))>32:
-			print "Shutter max duration time out of bounds"
-
-		self._shuttertime.write(dur)
-		self._hw.dispatch()
-
-		#self._calib.write(0)
-		self._calib.write(calib)
-		self._read.write(read)
-		self._data_continuous.write(data_continuous)
-		self._buffers.write(buffers)
-    		self._testbeam.write(testbeamclock)		  
-		self._clken.write(0x1)		  
-		self._hw.dispatch()
-		return self._waitsequencer()
 
 	def start_readout(self,buffer_num=1,mode=0x1):
 
@@ -142,16 +123,15 @@ class MAPSA_daq:
 
 
 
-	def read_data(self,buffer_num=1):
+	def read_data(self,buffer_num=1,tb=0):
 		counts = []  
 		mems = []  
 		for i in range(1,7):
-			#print i
-			pix,mem = MPA(self._hw,i).daq().read_data(buffer_num)
-			counts.append(pix) 
-			#print pix
-			#print ""
+			pix = []
+			mem = []
+			pix,mem = MPA(self._hw,i).daq().read_data(buffer_num,tb)
 
+			counts.append(pix) 
 			mems.append(mem)
 		return counts,mems
 
@@ -170,25 +150,20 @@ class MAPSA_daq:
 
 
 
-	def Strobe_settings(self,snum,sdel,slen,sdist):
+	def Strobe_settings(self,snum,sdel,slen,sdist,sdur = 0):
 
 		self._puls_num.write(snum)
 		self._puls_del.write(sdel)
 		self._puls_len.write(slen)
 		self._puls_dist.write(sdist)
 
-
+		self._shuttertime.write(sdur)
 		self._hw.dispatch()
 		#time.sleep(0.001)
 		
 
 			
 	def Shutter_open(self,smode,sdur):			
-   
-		self._shuttertime.write(sdur)
-    		self._clken.write(0x1)		  
-    		self._testbeam.write(0x0)		  
-		self._hw.dispatch()
 
 		self._shuttermode.write(smode)
 		self._hw.dispatch()

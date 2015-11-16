@@ -11,8 +11,6 @@ class MPA:
 	def config(self, xmlfile):
 		self.xmlfile = xmlfile
 		return MPA_config(self._hw, self._nmpa, xmlfile = self.xmlfile  )
-	#def scurve(self):
-	#	return MAPSA_scurve(self._hw, self._nmpa ,  xmlfile = self.xmlfile)
 	def testbeam(self):
 		return MPA_testbeam(self._hw, self._nmpa )
 
