@@ -8,7 +8,11 @@ import numpy as np
 import elementtree.ElementTree as ET
 from xml.dom import minidom
 from elementtree.ElementTree import Element, SubElement, Comment
-
+def any(iterable):
+    for element in iterable:
+        if element:
+            return True
+    return False
 def byte_to_binary(n):
     return ''.join(str((n & (1 << i)) and 1) for i in reversed(range(8)))
 

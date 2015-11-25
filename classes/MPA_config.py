@@ -127,10 +127,6 @@ class MPA_config:
 		self._hw.dispatch()
 		self._spi_wait()
 
-		#self._hw.getNode("Configuration").getNode("mode").write(self._nmpa)
-		#self._hw.dispatch()
-		#self._spi_wait()
-
 
 	def modifypixel(self, which, what, value):
 		pixel = self.xmlroot.findall('pixel')

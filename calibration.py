@@ -22,7 +22,7 @@ default	=	70,
 dest	=	'charge',
 help	=	'Charge for caldac')
 parser.add_option('-n', '--number', metavar='F', type='int', action='store',
-default	=	1200,
+default	=	300,
 dest	=	'number',
 help	=	'number of calstrobe pulses to send')
 
@@ -58,11 +58,6 @@ a._hw.dispatch()
 smode = 0x1
 sdur = 0xFFFFFFF
 
-#snum = options.number
-#sdel = 50
-#slen = 50
-#sdist = 50
-
 
 snum = options.number
 sdel = 0x4
@@ -96,25 +91,8 @@ config = mapsa.config(Config=1,string='default')
 config.upload()
 
 
-config.modifyperiphery('OM',[3]*6)
-config.modifyperiphery('RT',[0]*6)
-config.modifyperiphery('SCW',[0]*6)
-config.modifyperiphery('SH2',[0]*6)
-config.modifyperiphery('SH1',[0]*6)
-config.modifyperiphery('THDAC',[0]*6)
-config.modifyperiphery('CALDAC', [options.charge]*6)
-for x in range(1,25):
-	config.modifypixel(x,'PML', [1]*6)
-	config.modifypixel(x,'ARL', [1]*6)
-	config.modifypixel(x,'CEL', [CE]*6)
-	config.modifypixel(x,'CW', [0]*6)
-	config.modifypixel(x,'PMR', [1]*6)
-	config.modifypixel(x,'ARR', [1]*6)
-	config.modifypixel(x,'CER', [CE]*6)
-	config.modifypixel(x,'SP',  [SP]*6) 
-	config.modifypixel(x,'SR',  [1]*6) 
-config.write()
-
+confdict = {'OM':[3]*6,'RT':[0]*6,'SCW':[0]*6,'SH2':[0]*6,'SH1':[0]*6,'THDAC':[0]*6,'CALDAC':[options.charge]*6,'PML':[1]*6,'ARL':[1]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[1]*6,'ARR':[1]*6,'CER':[CE]*6,'SP':[SP]*6,'SR':[1]*6,'TRIMDACL':[15]*6,'TRIMDACR':[15]*6}
+config.modifyfull(confdict) 
 
 mapsa.daq().Strobe_settings(snum,sdel,slen,sdist)
 x1 = array('d')
@@ -251,12 +229,13 @@ for iy1 in range(0,len(yarrv[0][0,:])):
 c1.Print('plots/Scurve_Calibration'+options.string+'_pre.root', 'root')
 c1.Print('plots/Scurve_Calibration'+options.string+'_pre.pdf', 'pdf')
 c1.Print('plots/Scurve_Calibration'+options.string+'_pre.png', 'png')
-
+config.modifyperiphery('THDAC',[100]*6)
+config.upload()
+config.write()
 for i in range(0,6):
 	xmlrootfile = config._confsxmltree[i]
 	print xmlrootfile
 	a = config._confsxmlroot[i]
-	print a[17].find('TRIMDACL').text
 	print "writing data/Conf_calibrated_MPA"+str(i+1)+"_config1.xml"
 	xmlrootfile.write("data/Conf_calibrated_MPA"+str(i+1)+"_config1.xml")
 
@@ -333,8 +312,7 @@ c2.Divide(2,3)
 xvec =  np.array(x1)
 yarrv = []
 gr2arr = []
-#print xvec
-#print y1
+
 for i in range(0,6):
 		backup=TFile("plots/backup_postCalibration_"+options.string+"_MPA"+str(i)+".root","recreate")
 		

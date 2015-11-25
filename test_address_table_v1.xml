@@ -7,6 +7,7 @@
     		<node id="MPA_clock_enable"		    	address="0x00000002"  mask="0x00000001"  permission="rw"    />
     		<node id="testbeam_mode"		    	address="0x00000002"  mask="0x00000002"  permission="rw"    />
     		<node id="testbeam_clock"		    	address="0x00000002"  mask="0x00000004"  permission="rw"    />
+    		<node id="testbeam_calibration"		    	address="0x00000002"  mask="0x00000008"  permission="rw"    />
     		<node id="total_triggers"            		address="0x00000003"  mask="0x0000FFFFF"   permission="r"    />
     		<node id="trigger_counter"		    	address="0x00000008"     >
 				<node id="buffer_1"            		address="0x00000000"  mask="0x000007FF"  permission="r"    />

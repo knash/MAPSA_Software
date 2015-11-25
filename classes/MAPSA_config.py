@@ -1,6 +1,8 @@
 #Functions related to data aquisition at the MAPSA level - starting calibration and data taking 
 #as well as loops of MPA_daq readout objects for ease of use 
 
+
+
 from MPA import *
 from MPA_daq import *
 from MAPSA_functions import *
@@ -88,6 +90,34 @@ class MAPSA_config:
 			conf.upload(show=0,Config=self._Config)
 
 			impa+=1
+
+
+
+
+
+	def modifyfull(self, whichs):
+				
+
+
+
+		for key in whichs.keys():
+			if whichs[key] == [None]*6:
+				continue
+			if any(['OM' in key,'RT' in key,'SCW' in key,'SH2' in key,'SH1' in key,'THDAC' in key,'CALDAC' in key]):
+				self.modifyperiphery(key,whichs[key])
+			elif any(['PML' in key,'ARL' in key,'CEL' in key,'CW' in key,'PMR' in key,'ARR' in key,'CER' in key,'SP' in key,'SR' in key,'TRIMDACL' in key,'TRIMDACR' in key]):
+	
+				for x in range(1,25):
+					self.modifypixel(x,key,whichs[key])
+	
+		self.write()
+
+
+
+
+
+
+
 
 	def write(self):
   

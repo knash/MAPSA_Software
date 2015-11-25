@@ -51,8 +51,6 @@ class MAPSA_daq:
 			if count > 100:
 				print "readout Idle"
 				return 0
-		#print "Finished"
-		#print "Readout took " + str(count*0.005) + " seconds"
                 return 1
 				
 
@@ -70,7 +68,6 @@ class MAPSA_daq:
 				print "timeout"
 				return 0
 		
-		#print "Sequencer took " + str(i*0.001) + " seconds"
 		return 1
 
 
@@ -135,6 +132,17 @@ class MAPSA_daq:
 			mems.append(mem)
 		return counts,mems
 
+	def read_trig(self,buffer_num=1):
+
+
+		total_triggers = a._hw.getNode("Control").getNode('total_triggers').read()
+		trigger_counter = a._hw.getNode("Control").getNode('trigger_counter').getNode('buffer_'+str(buffer_num)).read()
+		Offset_BEAM = a._hw.getNode("Control").getNode('trigger_offset_BEAM').getNode('buffer_'+str(buffer_num)).readBlock(2048)
+		Offset_MPA = a._hw.getNode("Control").getNode('trigger_offset_MPA').getNode('buffer_'+str(buffer_num)).readBlock(2048)
+		a._hw.dispatch()
+
+		return total_triggers,trigger_counter,Offset_BEAM,Offset_MPA
+
 	def read_memory(self,mode,buffer_num=1):
 		BXs = [] 
 		datas = [] 
@@ -160,7 +168,19 @@ class MAPSA_daq:
 		self._shuttertime.write(sdur)
 		self._hw.dispatch()
 		#time.sleep(0.001)
-		
+	
+
+	def Testbeam_init(self,clock='glib',calib=0x0):
+		if clock=='glib':
+			clkset=0x0
+		if clock=='testbeam':
+			clkset=0x1
+		self._hw.getNode("Control").getNode('testbeam_calibration').write(calib)
+		self._hw.getNode("Control").getNode('testbeam_clock').write(clkset)
+		self._hw.getNode("Control").getNode('testbeam_mode').write(0x1)
+		self._hw.dispatch()
+
+			
 
 			
 	def Shutter_open(self,smode,sdur):			
