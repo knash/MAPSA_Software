@@ -16,7 +16,7 @@ from optparse import OptionParser
 parser = OptionParser()
 
 parser.add_option('-s', '--setting', metavar='F', type='string', action='store',
-default	=	'calibration',
+default	=	'default',
 dest	=	'setting',
 help	=	'settings ie default, calibration, testbeam etc')
 
@@ -38,7 +38,7 @@ help	=	'mpa to configure (0 for all)')
 
 
 parser.add_option('-c', '--charge', metavar='F', type='int', action='store',
-default	=	40,
+default	=	80,
 dest	=	'charge',
 help	=	'Charge for caldac')
 
@@ -55,7 +55,7 @@ help	=	'test beam clock')
 
 
 parser.add_option('-n', '--number', metavar='F', type='int', action='store',
-default	=	4000,
+default	=	2,
 dest	=	'number',
 help	=	'number of calcstrobe pulses to send')
 
@@ -252,7 +252,7 @@ else:
 
 if options.setting == 'default' or options.setting == 'calibration':
 
-	mapsa.daq().Strobe_settings(snum,sdel,slen,sdist,sdur)
+	mapsa.daq().Strobe_settings(snum,sdel,slen,sdist,CE)
 	if options.autospill == 'True':
 		sys.stdout = saveout
 		print "Starting DAQ loop.  Press Enter to start and Enter to quit"
@@ -308,11 +308,7 @@ if options.setting == 'default' or options.setting == 'calibration':
 
 
 			print "Timestamp: " + str(datetime.datetime.now().time().isoformat().replace(":","").replace(".",""))
-			time.sleep(.001)
-			mapsa.daq().Shutter_open(smode,sdur)
-			time.sleep(.001)
-			mapsa.daq().start_readout(rbuffer,readmode)
-			time.sleep(.001)
+			mapsa.daq().Shutter_open(smode,sdur,mem=1)
 
 			#print mem
 			sys.stdout = saveout

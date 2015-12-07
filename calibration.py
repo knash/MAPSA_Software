@@ -17,12 +17,24 @@ from matplotlib.pyplot import show, plot
 
 from optparse import OptionParser
 parser = OptionParser()
+parser.add_option('-s', '--setting', metavar='F', type='string', action='store',
+default	=	'none',
+dest	=	'setting',
+help	=	'settings ie default, calibration, testbeam etc')
+
 parser.add_option('-c', '--charge', metavar='F', type='int', action='store',
 default	=	70,
 dest	=	'charge',
 help	=	'Charge for caldac')
+
+parser.add_option('-w', '--shutterdur', metavar='F', type='int', action='store',
+default	=	0xFFFFF,
+dest	=	'shutterdur',
+help	=	'shutter duration')
+
+
 parser.add_option('-n', '--number', metavar='F', type='int', action='store',
-default	=	300,
+default	=	0x5,
 dest	=	'number',
 help	=	'number of calstrobe pulses to send')
 
@@ -56,13 +68,13 @@ a._hw.dispatch()
 
 
 smode = 0x1
-sdur = 0xFFFFFFF
+sdur = options.shutterdur
 
 
 snum = options.number
-sdel = 0x4
-slen = 0x5
-sdist = 0xF
+sdel = 0xF
+slen = 0xF
+sdist = 0xFF
 
 
 
@@ -80,8 +92,10 @@ for i in range(1,7):
 
 Confnum=1
 configarr = []
-
-CE=0
+if options.setting=='calibration':
+	CE=1
+else:
+	CE=0
 SP=0
 
 
@@ -91,10 +105,10 @@ config = mapsa.config(Config=1,string='default')
 config.upload()
 
 
-confdict = {'OM':[3]*6,'RT':[0]*6,'SCW':[0]*6,'SH2':[0]*6,'SH1':[0]*6,'THDAC':[0]*6,'CALDAC':[options.charge]*6,'PML':[1]*6,'ARL':[1]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[1]*6,'ARR':[1]*6,'CER':[CE]*6,'SP':[SP]*6,'SR':[1]*6,'TRIMDACL':[15]*6,'TRIMDACR':[15]*6}
+confdict = {'OM':[3]*6,'RT':[0]*6,'SCW':[0]*6,'SH2':[0]*6,'SH1':[0]*6,'THDAC':[0]*6,'CALDAC':[options.charge]*6,'PML':[1]*6,'ARL':[1]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[1]*6,'ARR':[1]*6,'CER':[CE]*6,'SP':[SP]*6,'SR':[1]*6,'TRIMDACL':[30]*6,'TRIMDACR':[30]*6}
 config.modifyfull(confdict) 
 
-mapsa.daq().Strobe_settings(snum,sdel,slen,sdist)
+mapsa.daq().Strobe_settings(snum,sdel,slen,sdist,cal=CE)
 x1 = array('d')
 y1 = []
 for x in range(0,256):
@@ -108,7 +122,6 @@ for x in range(0,256):
 	config.write()
 
 	mapsa.daq().Shutter_open(smode,sdur)
-	mapsa.daq().start_readout(1,0x0)
 
 	pix,mem = mapsa.daq().read_data(buffnum,tb=0)
 	ipix=0
@@ -135,10 +148,12 @@ xvec =  np.array(x1)
 thdacvv = []
 yarrv = []
 grarr = []
+xdvals = []
+
 for i in range(0,6):
 	backup=TFile("plots/backup_preCalibration_"+options.string+"_MPA"+str(i)+".root","recreate")
 	calibconfxmlroot	=	calibconfsxmlroot[i]
-	
+	xdvals.append(0.)
 	c1.cd(i+1)
 	thdacv = []
 	yarr =  np.array(y1[i])
@@ -173,20 +188,23 @@ for i in range(0,6):
 			yval = yvec[ibin]
 			yval1 = yvec[ibin+1]
 	
-			if yval1-halfmax<0.0 and ibin>maxbin[0][0]:
+			if (yval1-halfmax)<0.0 and ibin>maxbin[0][0]:
 				if iy1%2==0:
 					prev_trim = int(calibconfxmlroot[(iy1)/2+1].find('TRIMDACL').text)
 				else:
 					prev_trim = int(calibconfxmlroot[(iy1+1)/2].find('TRIMDACR').text)
 				#print "ptrim " + str(prev_trim)
 				#print "halfmax " +  str(halfmax)
+				
+				xdacval = (abs(yval-halfmax)*xval + abs(yval1-halfmax)*xval1)/(abs(yval-halfmax) + abs(yval1-halfmax))
 
-				if abs(yval-halfmax)<(yval1-halfmax):
-					xdacval = xval
-				else:
-					xdacval = xval1
+				#if abs(yval-halfmax)<abs(yval1-halfmax):
+				#	xdacval = xval
+				#else:
+				#	xdacval = xval1
 				#print "xdacval " + str(xdacval)
-				trimdac = int(31) + prev_trim - int(xdacval*1.456/3.75)
+				trimdac = 31 + prev_trim - int(round(xdacval*1.456/3.75))
+				xdvals[i] += xdacval*1.456/3.75
 				#print trimdac
 
 				thdacv.append(trimdac)
@@ -199,31 +217,66 @@ for i in range(0,6):
 	
 				trimdac = int(prev_trim)
 				thdacv.append(trimdac)
+				print "UNTRIMMED"
 				break
 		
 	thdacvv.append(thdacv)
 
+	print thdacv
 
+ave = 0
+for x in xdvals:
+	ave+=x/48.
+ave/=6.
+
+
+offset = []
+avearr = []
+mpacorr = []
+for i in range(0,6):
+	thdacv = thdacvv[i]
+	ave15 = 0
+	for j in thdacvv[i]:
+		ave15+=j
+	ave15/=len(thdacvv[i])
+	avearr.append(ave15)
+	mpacorr.append(xdvals[i]/48.-ave)
+	
+#print 'average correction'
+#print avearr
+#print mpacorr
+for i in range(0,6):
+	thdacv = thdacvv[i]
+	range1 = min(thdacv)	
+	range2 = max(thdacv)	
+	offset.append(15-int(round(avearr[i]+mpacorr[i])))
+#print offset
 
 thdacvvorg = []
+cols = [[],[],[],[],[],[]]
 for iy1 in range(0,len(yarrv[0][0,:])):
 	thdacvvorg.append(np.array(thdacvv)[:,iy1])
 	upldac = []
 	for i in range(0,6):
 		thdacv = thdacvv[i]
-		range1 = min(thdacv)	
-		range2 = max(thdacv)	
-		offset =int(15-(range1+range2)*0.5)
-		upldac.append(thdacv[iy1]+offset)
+		upldac.append(thdacv[iy1]+offset[i])
 
-			#	thadacval =
+
 	for u in range(0,len(upldac)):
 		upldac[u] = max(0,upldac[u])
+		upldac[u] = min(31,upldac[u])
+		if upldac[u]==31:
+			cols[u].append(2)
+		elif upldac[u]==0:
+			cols[u].append(4)
+		else:
+			cols[u].append(1)
+	#print upldac
 
 	if iy1%2==0:
-		config.modifypixel((iy1)/2+1,'TRIMDACL',max(0,upldac ))
+		config.modifypixel((iy1)/2+1,'TRIMDACL',upldac)
 	else:
-		config.modifypixel((iy1+1)/2,'TRIMDACR',max(0,upldac ))
+		config.modifypixel((iy1+1)/2,'TRIMDACR',upldac)
 
 
 c1.Print('plots/Scurve_Calibration'+options.string+'_pre.root', 'root')
@@ -283,11 +336,9 @@ for x in range(0,256):
 
 
 
-			#mapsa.daq().daqloop(shutterdur=0,calib=1,data_continuous=0,read=0,buffers=buffnum,testbeamclock=0)
+
 
 			mapsa.daq().Shutter_open(smode,sdur)
-			mapsa.daq().start_readout(1,0x0)
-
 			pix,mem = mapsa.daq().read_data(buffnum,tb=0)
 			ipix=0
 			for p in pix:
@@ -300,8 +351,6 @@ for x in range(0,256):
 
 				ipix+=1
 			x1.append(x)
-	
-			time.sleep(0.001)
 			
 	
 
@@ -312,7 +361,7 @@ c2.Divide(2,3)
 xvec =  np.array(x1)
 yarrv = []
 gr2arr = []
-
+means = []
 for i in range(0,6):
 		backup=TFile("plots/backup_postCalibration_"+options.string+"_MPA"+str(i)+".root","recreate")
 		
@@ -320,25 +369,31 @@ for i in range(0,6):
 		yarr =  np.array(y1[i])
 		gr2arr.append([])
 		gr2 = []
+		means.append(0.)
 		yarrv.append(yarr)
 		for iy1 in range(0,len(yarr[0,:])):
 			yvec = yarr[:,iy1]
 
 			gr2.append(TGraph(len(x1)-1,array('d',xvec),array('d',yvec)))
+			
 			if iy1==0:
 
 				gr2[iy1].SetTitle(';DAC Value (1.456 mV);Counts (1/1.456)')
 				gr2arr[i].append(gr2[iy1])
+				gr2arr[i][iy1].SetLineColor(cols[i][iy1])
 				gr2arr[i][iy1].Draw()
 				gr2[iy1].Write(str(iy1))
 
 			else:
 				gr2arr[i].append(gr2[iy1])
+				gr2arr[i][iy1].SetLineColor(cols[i][iy1])
 				gr2arr[i][iy1].Draw('same')
 				gr2[iy1].Write(str(iy1))
 				gPad.Update()
-
-
+			means[i]+=gr2[iy1].GetMean(1)
+print 'Means'
+for m in means:
+	print m/48.
 
 c2.Print('plots/Scurve_Calibration'+options.string+'_post.root', 'root')
 c2.Print('plots/Scurve_Calibration'+options.string+'_post.pdf', 'pdf')

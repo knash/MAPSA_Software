@@ -26,20 +26,17 @@ class MAPSA_config:
 		self._puls_dist  = self._Shutter.getNode("Strobe").getNode("distance")
 		self._puls_del   = self._Shutter.getNode("Strobe").getNode("delay")
 		self._shuttertime	= self._Shutter.getNode("time")
-		self._shutterbusy	= self._Shutter.getNode("busy")
-		self._shuttermode	= self._Shutter.getNode("mode")
 
 		self._sequencerbusy  = self._Sequencer.getNode("busy")
-		self._calib  = self._Sequencer.getNode("calibration")
-		self._read  = self._Sequencer.getNode("readout")
+		self._calib  = self._Control.getNode("calibration")
+		#self._read  = self._Control.getNode("readout")
 		self._buffers  = self._Sequencer.getNode("buffers_index")
 		self._data_continuous  = self._Sequencer.getNode("datataking_continuous")
 
 		self._memory  = self._Readout.getNode("Memory")
 		self._counter  = self._Readout.getNode("Counter")
-		self._busyread  = self._Readout.getNode("busy")
-		self._readmode  = self._Readout.getNode("memory_readout")
-		self._readbuff  = self._Readout.getNode("buffer_num")
+		self._readmode  = self._Control.getNode("readout")
+		#self._readbuff  = self._Readout.getNode("buffer_num")
 
     		self._clken = self._Control.getNode("MPA_clock_enable") 		  
     		self._testbeam = self._Control.getNode("testbeam_mode") 		  
@@ -121,10 +118,7 @@ class MAPSA_config:
 
 	def write(self):
   
-		self._spi_wait()
 		self._hw.getNode("Configuration").getNode("num_MPA").write(0x6)
-		self._hw.dispatch()
-		self._spi_wait()
 		self._hw.getNode("Configuration").getNode("mode").write(0x5)
 		self._hw.dispatch()
 		self._spi_wait()

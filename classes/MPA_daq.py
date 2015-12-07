@@ -19,9 +19,10 @@ class MPA_daq:
 		self._puls_del   = self._Shutter.getNode("Strobe").getNode("delay")
 		self._shuttertime	= self._Shutter.getNode("time")
 
-		self._busy  = self._Control.getNode("Sequencer").getNode("busy")
-		self._calib  = self._Control.getNode("Sequencer").getNode("calibration")
-		self._read  = self._Control.getNode("Sequencer").getNode("readout")
+		self._sequencerbusy  = self._Control.getNode("Sequencer").getNode("busy")
+		self._calib  = self._Control.getNode("calibration")
+		self._read  = self._Control.getNode("readout")
+
 		self._buffers  = self._Control.getNode("Sequencer").getNode("buffers_index")
 		self._data_continuous  = self._Control.getNode("Sequencer").getNode("datataking_continuous")
 
@@ -29,84 +30,81 @@ class MPA_daq:
 
 		self._memory  = self._Readout.getNode("Memory")
 		self._counter  = self._Readout.getNode("Counter")
-		self._busyread  = self._Readout.getNode("busy")
-
-		self._readmode  = self._Readout.getNode("memory_readout")
-		self._readbuff  = self._Readout.getNode("buffer_num")
+		self._readmode  = self._Control.getNode("readout")
+		#self._readbuff  = self._Readout.getNode("buffer_num")
 
 
-	def _waitreadout(self):
-		busyread = self._busyread.read()
+	
+
+	def _waitsequencer(self):
+		i=0
+		busyseq = self._sequencerbusy.read()
 		self._hw.dispatch()
-		count = 0
-		while busyread:
-			time.sleep(0.005)
-			busy = self._busyread.read()
-		        self._hw.dispatch()
-			count = count + 1
-			if count > 100:
-				print "readout Idle"
-				return 0
-		#print "Finished"
-		#print "Readout took " + str(count*0.005) + " seconds"
-                return 1
-				
+		while busyseq:
+			busyseq = self._sequencerbusy.read()
+			self._hw.dispatch()
 
+			time.sleep(0.001)
+			i+=1
+			if i>100:
+				print "timeout"
+				return 0
+		
+		return 1
 
 	def read_raw(self,buffer_num,dcindex):
-
+		self._waitsequencer()
 		counter_data  = self._counter.getNode("MPA"+str(dcindex)).getNode("buffer_"+str(buffer_num)).readBlock(25)
 		memory_data = self._memory.getNode("MPA"+str(self._nmpa)).getNode("buffer_"+str(buffer_num)).readBlock(216)
 		self._hw.dispatch()
-		self._waitreadout()
+
 
 
 		return [memory_data,counter_data]
 
 	def read_data(self,buffer_num,tb=0,dcindex=-1):
-
+		#print hex(0xFFFFFFF0+self._nmpa)
+		self._Readout.getNode("Header").getNode("MPA"+str(self._nmpa)).write(0xFFFFFFF0+self._nmpa)
+		self._hw.dispatch()
 		if dcindex==-1:
 			dcindex=self._nmpa
 		eshift = 0
-		if tb:
-			eshift =self._nmpa
-		else:
-			eshift = self._nmpa-2
+		#if tb:
+		#	eshift =self._nmpa
+		#else:
+		#	eshift = self._nmpa-2
 
 		(memory_data,counter_data)= self.read_raw(buffer_num,dcindex)
 
 		#print memory_data
-		#print counter_data
+
+
 		pix = [None]*50
 		mem = [None]*96
 		for x in range(0,25):
 				
-			shift1 = int(5+3 - eshift)
-			shift2 = int(5+19 - eshift)
+			shift1 = int(0)
+			shift2 = int(16)
+			#if x==0:
+		#		print "starting MPA "+ str(self._nmpa)
+			#print str(hex_to_binary(frmt(counter_data[x]))) 
+			#print str(hex_to_binary(frmt((counter_data[x] >> shift1) & 0xffff))) 
+			#print str(hex_to_binary(frmt((counter_data[x] >> shift2) & 0xffff))) 
 
-			#if counter_data[x]!=0 and self._nmpa==5:
-			#	print "mpa " + str(self._nmpa)
-			#	print "pre"
-			#	print str(hex_to_binary(frmt(int(counter_data[x]))))
+			#print 
+	
 			pix[2*x]  = int((counter_data[x] >> shift1) & 0xffff)
 			pix[2*x+1]= int((counter_data[x] >> shift2) & 0xffff)
 
-			#if counter_data[x]!=0 and self._nmpa==5:
-		#		print "post"
-		#		print str(hex_to_binary(frmt(pix[2*x])))
-		#		print str(hex_to_binary(frmt(pix[2*x+1])))
-			#print pix[2*x]
-			#print pix[2*x+1]
+
 		memory_string = ''
-		#print memory_data
+
 		for x in range(0,216):
-			#print memory_data[216 - x]
 			memory_string = memory_string + str(hex_to_binary(frmt(memory_data[215 - x])))
-	#	if self._nmpa == 1:
-	#		print memory_string
+
 		for x in range(0,96):
 			mem[x] = memory_string [x*72 : x*72+72]			
-
+			#mem[x] = memory_string [x*72+1 : x*72+72+1]			
 		return pix,mem	
 
 
@@ -158,20 +156,20 @@ class MPA_daq:
 			data = [row, bend, col]
 		
 		if (mode == 3):
-
+			#print memory
 			for x in range(0,96):
-				if tb: 
-					memory[x] = memory[x][2:72]
-				if (memory[x][0:5] == '00000'):
+				#if tb: 
+				#	memory[x] = memory[x][2:72]
+				if (memory[x][0:8] == '00000000'):
 					break
-				#print memory[x]
-				#print memory[x][0:5]
-				#print memory[x][5:21]
-				#print memory[x][21:69]
-				#print 
-				#print 
-				BX.append(int(memory[x][5:21],2))
-				hit.append(memory [x][21:69])		
+				print memory[x]
+				print memory[x][0:8]
+				print memory[x][8:24]
+				print memory[x][24:72]
+				print 
+				print 
+				BX.append(int(memory[x][8:24],2))
+				hit.append(memory [x][24:72])		
 		
 			
 			#print hit
