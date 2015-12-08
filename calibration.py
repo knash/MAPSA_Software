@@ -67,7 +67,7 @@ a._hw.dispatch()
 
 
 
-smode = 0x1
+smode = 0x0
 sdur = options.shutterdur
 
 
@@ -121,9 +121,9 @@ for x in range(0,256):
 	config.upload()
 	config.write()
 
-	mapsa.daq().Shutter_open(smode,sdur)
+	mapsa.daq().Sequencer_init(smode,sdur)
 
-	pix,mem = mapsa.daq().read_data(buffnum,tb=0)
+	pix,mem = mapsa.daq().read_data(buffnum)
 	ipix=0
 	for p in pix:
 
@@ -338,8 +338,8 @@ for x in range(0,256):
 
 
 
-			mapsa.daq().Shutter_open(smode,sdur)
-			pix,mem = mapsa.daq().read_data(buffnum,tb=0)
+			mapsa.daq().Sequencer_init(smode,sdur)
+			pix,mem = mapsa.daq().read_data(buffnum)
 			ipix=0
 			for p in pix:
 

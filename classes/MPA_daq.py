@@ -52,8 +52,9 @@ class MPA_daq:
 		
 		return 1
 
-	def read_raw(self,buffer_num,dcindex):
-		self._waitsequencer()
+	def read_raw(self,buffer_num,dcindex,wait=True):
+		if wait==True:
+			self._waitsequencer()
 		counter_data  = self._counter.getNode("MPA"+str(dcindex)).getNode("buffer_"+str(buffer_num)).readBlock(25)
 		memory_data = self._memory.getNode("MPA"+str(self._nmpa)).getNode("buffer_"+str(buffer_num)).readBlock(216)
 		self._hw.dispatch()
@@ -62,19 +63,22 @@ class MPA_daq:
 
 		return [memory_data,counter_data]
 
-	def read_data(self,buffer_num,tb=0,dcindex=-1):
-		#print hex(0xFFFFFFF0+self._nmpa)
+	def read_data(self,buffer_num,dcindex=-1,wait=True):
 		self._Readout.getNode("Header").getNode("MPA"+str(self._nmpa)).write(0xFFFFFFF0+self._nmpa)
 		self._hw.dispatch()
 		if dcindex==-1:
 			dcindex=self._nmpa
 		eshift = 0
-		#if tb:
-		#	eshift =self._nmpa
-		#else:
-		#	eshift = self._nmpa-2
 
-		(memory_data,counter_data)= self.read_raw(buffer_num,dcindex)
+
+		(memory_data,counter_data)= self.read_raw(buffer_num,dcindex,wait)
+
+			
+		pix,mem	= MPA_daq.format(counter_data,memory_data)
+		return pix,mem	
+
+
+	def format(self,counter_data,memory_data):
 
 		#print memory_data
 
@@ -103,15 +107,13 @@ class MPA_daq:
 			memory_string = memory_string + str(hex_to_binary(frmt(memory_data[215 - x])))
 
 		for x in range(0,96):
-			mem[x] = memory_string [x*72 : x*72+72]			
-			#mem[x] = memory_string [x*72+1 : x*72+72+1]			
+			#mem[x] = memory_string [x*72 : x*72+72]			
+			mem[x] = memory_string [x*72+1 : x*72+72+1]			
 		return pix,mem	
 
 
-##############UNEDITED			
 
-
-	def read_memory(self, mem,mode,tb=0):
+	def read_memory(self, mem,mode):
 
 		memory = np.array(mem)
 		BX = []
@@ -156,18 +158,17 @@ class MPA_daq:
 			data = [row, bend, col]
 		
 		if (mode == 3):
-			#print memory
+
 			for x in range(0,96):
-				#if tb: 
-				#	memory[x] = memory[x][2:72]
+
 				if (memory[x][0:8] == '00000000'):
 					break
-				print memory[x]
-				print memory[x][0:8]
-				print memory[x][8:24]
-				print memory[x][24:72]
-				print 
-				print 
+			#	print memory[x]
+		#		print memory[x][0:8]
+		#		print memory[x][8:24]
+		#		print memory[x][24:72]
+		#		print 
+		#		print 
 				BX.append(int(memory[x][8:24],2))
 				hit.append(memory [x][24:72])		
 		

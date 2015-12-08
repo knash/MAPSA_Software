@@ -117,7 +117,6 @@ print "Running firmware version " + str(firmver)
 
 
 
-smode = 0x1
 sdur = options.shutterdur
 
 snum = options.number
@@ -126,7 +125,6 @@ slen = 0xFFF
 sdist = 0xFF
 
 
-quickplot = TH2F("quickplot", "", 4,-0.5,3.5, 16, 0, 16 )
 
 formarr = ['stubfinding','stripemulator' ,'centroid','noprocessing']
 memmode = formarr.index(options.format)
@@ -250,7 +248,7 @@ else:
 
 
 
-if options.setting == 'default' or options.setting == 'calibration':
+if options.setting == 'manual' or options.setting == 'calibration':
 
 	mapsa.daq().Strobe_settings(snum,sdel,slen,sdist,CE)
 	if options.autospill == 'True':
@@ -308,11 +306,11 @@ if options.setting == 'default' or options.setting == 'calibration':
 
 
 			print "Timestamp: " + str(datetime.datetime.now().time().isoformat().replace(":","").replace(".",""))
-			mapsa.daq().Shutter_open(smode,sdur,mem=1)
+			mapsa.daq().Sequencer_init(0x0,sdur,mem=1)
 
 			#print mem
 			sys.stdout = saveout
-			pix,mem = mapsa.daq().read_data(1,tb=0)
+			pix,mem = mapsa.daq().read_data(1)
 			sys.stdout = Outf1
 			parray = []
 			marray = []
@@ -324,7 +322,7 @@ if options.setting == 'default' or options.setting == 'calibration':
 					parray.append(pix[i])
 
 					sys.stdout = saveout
-					marray.append(mpa[i].daq().read_memory(mem[i],memmode,tb=0))
+					marray.append(mpa[i].daq().read_memory(mem[i],memmode))
 
 					sys.stdout = Outf1
 					cntsperspill += sum(pix[i])
@@ -397,7 +395,7 @@ if options.setting == 'default' or options.setting == 'calibration':
 
 	    F.Write()
 	    F.Close()
-if options.setting == 'testbeam':
+if options.setting == 'testbeam' or options.setting == 'default':
 		sys.stdout = saveout
 		print "Starting DAQ loop.  Press Enter to start and Enter to quit"
 		raw_input("...")
@@ -409,14 +407,15 @@ if options.setting == 'testbeam':
 
 		config.modifyfull(confdict)  
 
-		a._hw.getNode("Shutter").getNode("time").write(options.shutterdur)
-		a._hw.dispatch()
-
-		
-		time.sleep(.2)
-		mapsa.daq().Testbeam_init(clock='glib',calib=0x0)
 
 
+	
+		if options.setting == 'testbeam':
+			a._hw.getNode("Shutter").getNode("time").write(options.shutterdur)
+			a._hw.dispatch()
+			mapsa.daq().Testbeam_init(clock='glib',calib=0x0)
+		if options.setting == 'default':
+			mapsa.daq().Sequencer_init(0x1,sdur,mem=1)
 		ibuffer=1
 		
 		iread=0
@@ -427,14 +426,34 @@ if options.setting == 'testbeam':
 			buffers_num = a._hw.getNode("Control").getNode('Sequencer').getNode('buffers_num').read()
 			spill = a._hw.getNode("Control").getNode('Sequencer').getNode('spill').read()
 			a._hw.dispatch()
-
+			#sys.stdout = saveout
+			#print buffers_num
+			#sys.stdout = Outf1
 			if buffers_num<4:	
 				shutters+=1
 				iread+=1
 				sys.stdout = saveout
-				pix,mem = mapsa.daq().read_data(ibuffer,tb=1)
-				total_triggers,trigger_counter,Offset_BEAM,Offset_MPA = mapsa.daq().read_trig(ibuffer)
+				print "reading " + str(ibuffer)
+				pix,mem = mapsa.daq().read_data(ibuffer,wait=False)
+				#memsums = [[0]*49,[0]*49,[0]*49,[0]*49,[0]*49,[0]*49]
+				#imem = 0
+				#for m1 in mem:
+				#	memsum = memsums[imem]
+				#	for m in m1:
+				#		for im in range(0,len(m)):
+				#			print im
+				#			print m[im]
+				#		
+				#			memsum[im] += int(m[im])
+				#	imem+=1
+				#	print memsum
 
+				if options.setting == 'testbeam':
+					total_triggers,trigger_counter,Offset_BEAM,Offset_MPA = mapsa.daq().read_trig(ibuffer)
+				ibuffer+=1
+				if ibuffer >4:
+					ibuffer=1 
+				#continue 
 				sys.stdout = Outf1
 
 				parray = []
@@ -446,41 +465,42 @@ if options.setting == 'testbeam':
 					parray.append(pix[i])
 					cntspershutter+=sum(pix[i])
 					sys.stdout = saveout
-					marray.append(mpa[i].daq().read_memory(mem[i],memmode,tb=1))
+					marray.append(mpa[i].daq().read_memory(mem[i],memmode))
 					sys.stdout = Outf1
 				cntsperspill+=cntspershutter
 				sys.stdout = saveout
 				print "Number of Shutters: " + str(shutters)
 				print "Counts Total: " + str(cntsperspill)
-				print "Triggers Total: " + str(total_triggers)
 				print "Counts per Shutter: " + str(cntspershutter)
-				print "Triggers per Shutter: " + str(trigger_counter)	
 				print "Reading buffer: " + str(ibuffer)
+				if options.setting == 'testbeam':
+					print "Triggers per Shutter: " + str(trigger_counter)	
+					print "Triggers Total: " + str(total_triggers)
 				print 
 				sys.stdout = Outf1
 				print "Number of Shutters: " + str(shutters)
 				print "Counts Total: " + str(cntsperspill)
-				print "Triggers Total: " + str(total_triggers)
 				print "Counts per Shutter: " + str(cntspershutter)
-				print "Triggers per Shutter: " + str(trigger_counter)	
 				print "Reading buffer: " + str(ibuffer)
+				if options.setting == 'testbeam':
+					print "Triggers per Shutter: " + str(trigger_counter)	
+					print "Triggers Total: " + str(total_triggers)
 				print 
 
-				ibuffer+=1
-				if ibuffer >4:
-					ibuffer=1 
 
-				offsetbeam = []
-				offsetmpa = []
-				offdat = []
-				for i in range(0,trigger_counter):
-					offsetbeam.append(Offset_BEAM[i])
-					offdat.append(1000*(Offset_BEAM[i]-Offset_BEAM[0])/26.5)
-					offsetmpa.append(Offset_MPA[i])
-				print "Offset beam: " + str(offsetbeam)
-				print "Offset mpa: " + str(offsetmpa)
-				a._hw.dispatch()
-				offset = []
+				if options.setting == 'testbeam':
+	
+					offsetbeam = []
+					offsetmpa = []
+					offdat = []
+					for i in range(0,trigger_counter):
+						offsetbeam.append(Offset_BEAM[i])
+						offdat.append(1000*(Offset_BEAM[i]-Offset_BEAM[0])/26.5)
+						offsetmpa.append(Offset_MPA[i])
+					print "Offset beam: " + str(offsetbeam)
+					print "Offset mpa: " + str(offsetmpa)
+					a._hw.dispatch()
+					offset = []
 
 				sys.stdout = saveout
 
@@ -524,11 +544,12 @@ if options.setting == 'testbeam':
 
 						sys.stdout = Outf1
 						i+=1
-
-				temp_vars["TRIG_COUNTS_SHUTTER"] = [trigger_counter]
-				temp_vars["TRIG_COUNTS_TOTAL"] = [total_triggers]
-				temp_vars["TRIG_OFFSET_BEAM"] = offsetbeam
-				temp_vars["TRIG_OFFSET_MPA"] = offsetmpa
+				if options.setting == 'testbeam':
+	
+					temp_vars["TRIG_COUNTS_SHUTTER"] = [trigger_counter]
+					temp_vars["TRIG_COUNTS_TOTAL"] = [total_triggers]
+					temp_vars["TRIG_OFFSET_BEAM"] = offsetbeam
+					temp_vars["TRIG_OFFSET_MPA"] = offsetmpa
 
 				for tv in tree_vars.keys():
 					sys.stdout = saveout
@@ -543,6 +564,8 @@ if options.setting == 'testbeam':
 				print "---------------------------------------------------------------------------"
 
      			if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
+				for ibuffer in range(1,5):
+					pix,mem = mapsa.daq().read_data(ibuffer,wait=False)
 				a._hw.getNode("Control").getNode('testbeam_mode').write(0x0)
         			line = raw_input()
 				print "Ending loop"
