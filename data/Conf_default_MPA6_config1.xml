@@ -3,7 +3,7 @@
     <periphery>
 	<OM>3</OM>
 	<RT>0</RT>
-	<SCW>1</SCW>
+	<SCW>0</SCW>
 	<SH2>0</SH2>
 	<SH1>0</SH1>
 	<CALDAC>15</CALDAC>

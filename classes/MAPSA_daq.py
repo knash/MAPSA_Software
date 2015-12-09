@@ -63,25 +63,35 @@ class MAPSA_daq:
 #		self._readmode.write(mode)
 #		self._hw.dispatch()
 
-
+	def header_init(self):
+		for i in range(1,7):
+			self._Readout.getNode("Header").getNode("MPA"+str(i)).write(0xFFFFFFF0+i)
+			self._hw.dispatch()
 
 	def read_data(self,buffer_num=1,wait=True):
 		counts = []  
 		mems = []  
 
 		dcindex=-1
-		for i in range(1,7):
 
+		for i in range(1,7):
+			#start = time.time()
 			counter_data  = self._counter.getNode("MPA"+str(i)).getNode("buffer_"+str(buffer_num)).readBlock(25)
 			memory_data = self._memory.getNode("MPA"+str(i)).getNode("buffer_"+str(buffer_num)).readBlock(216)
-
-
+			#end = time.time()
+			#print "reading MPA " + str(i) 
+			#print (end - start)*1000
 			counts.append(counter_data) 
 			mems.append(memory_data)
 		self._hw.dispatch()
+		#start = time.time()
 		for i in range(0,len(counts)):
 			#print mems[i]
+			#print counts[i]
 			counts[i],mems[i] = MPA(self._hw,i).daq().format(counts[i],mems[i])
+		#end = time.time()
+		#print "Formatting "
+		#print (end - start)*1000
 		return counts,mems
 
 	def read_trig(self,buffer_num=1):
@@ -136,6 +146,7 @@ class MAPSA_daq:
 			
 	def Sequencer_init(self,smode,sdur,mem=1):
 		self._shuttertime.write(sdur)	
+		self._hw.dispatch()		
 		self._hw.getNode("Control").getNode('testbeam_mode').write(0x0)
 		self._read.write(mem)
 		self._hw.dispatch()		

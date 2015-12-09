@@ -15,6 +15,8 @@ def any(iterable):
     return False
 def byte_to_binary(n):
     return ''.join(str((n & (1 << i)) and 1) for i in reversed(range(8)))
+def binary(x):
+    return np.binary_repr(x,32)
 
 def hex_to_binary(h):
     binnumber = ''.join(byte_to_binary(ord(b)) for b in binascii.unhexlify(h))

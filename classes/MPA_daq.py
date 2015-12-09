@@ -80,8 +80,6 @@ class MPA_daq:
 
 	def format(self,counter_data,memory_data):
 
-		#print memory_data
-
 
 		pix = [None]*50
 		mem = [None]*96
@@ -89,13 +87,7 @@ class MPA_daq:
 				
 			shift1 = int(0)
 			shift2 = int(16)
-			#if x==0:
-		#		print "starting MPA "+ str(self._nmpa)
-			#print str(hex_to_binary(frmt(counter_data[x]))) 
-			#print str(hex_to_binary(frmt((counter_data[x] >> shift1) & 0xffff))) 
-			#print str(hex_to_binary(frmt((counter_data[x] >> shift2) & 0xffff))) 
-
-			#print 
+	
 	
 			pix[2*x]  = int((counter_data[x] >> shift1) & 0xffff)
 			pix[2*x+1]= int((counter_data[x] >> shift2) & 0xffff)
@@ -104,10 +96,9 @@ class MPA_daq:
 		memory_string = ''
 
 		for x in range(0,216):
-			memory_string = memory_string + str(hex_to_binary(frmt(memory_data[215 - x])))
-
+			memory_string = memory_string + str(binary(memory_data[215 - x]))
+		
 		for x in range(0,96):
-			#mem[x] = memory_string [x*72 : x*72+72]			
 			mem[x] = memory_string [x*72+1 : x*72+72+1]			
 		return pix,mem	
 
@@ -163,7 +154,7 @@ class MPA_daq:
 
 				if (memory[x][0:8] == '00000000'):
 					break
-			#	print memory[x]
+				#print memory[x]
 		#		print memory[x][0:8]
 		#		print memory[x][8:24]
 		#		print memory[x][24:72]

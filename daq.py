@@ -18,7 +18,12 @@ parser = OptionParser()
 parser.add_option('-s', '--setting', metavar='F', type='string', action='store',
 default	=	'default',
 dest	=	'setting',
-help	=	'settings ie default, calibration, testbeam etc')
+help	=	'settings ie default,  testbeam etc')
+
+parser.add_option('-C', '--calib', metavar='F', type='string', action='store',
+default	=	'False',
+dest	=	'calib',
+help	=	'calibration')
 
 parser.add_option('-r', '--readout', metavar='F', type='string', action='store',
 default	=	'both',
@@ -55,7 +60,7 @@ help	=	'test beam clock')
 
 
 parser.add_option('-n', '--number', metavar='F', type='int', action='store',
-default	=	2,
+default	=	0xF,
 dest	=	'number',
 help	=	'number of calcstrobe pulses to send')
 
@@ -153,7 +158,7 @@ if options.daqstring!='':
 foldername = 'daqout_'+options.setting+'_'+options.format+'_'+timestr+dstr
 
 CE=0
-if options.setting == 'calibration':
+if options.calib == 'True':
 	CE=1
 if options.readout=='both':
 	AR=1
@@ -184,7 +189,7 @@ else:
 Endloop = False
 spillnumber = 0
 
-confdict = {'OM':[memmode]*6,'RT':[None]*6,'SCW':[None]*6,'SH2':[None]*6,'SH1':[None]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'PML':[None]*6,'ARL':[AR]*6,'CEL':[CE]*6,'CW':[None]*6,'PMR':[None]*6,'ARR':[AR]*6,'CER':[CE]*6,'SP':[None]*6,'SR':[SR]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
+confdict = {'OM':[memmode]*6,'RT':[None]*6,'SCW':[0]*6,'SH2':[None]*6,'SH1':[None]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'PML':[None]*6,'ARL':[AR]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[None]*6,'ARR':[AR]*6,'CER':[CE]*6,'SP':[None]*6,'SR':[SR]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
 
 if options.record=='True':
 
@@ -247,10 +252,10 @@ else:
 
 
 
+mapsa.daq().Strobe_settings(snum,sdel,slen,sdist,CE)
+if options.setting == 'manual':
 
-if options.setting == 'manual' or options.setting == 'calibration':
 
-	mapsa.daq().Strobe_settings(snum,sdel,slen,sdist,CE)
 	if options.autospill == 'True':
 		sys.stdout = saveout
 		print "Starting DAQ loop.  Press Enter to start and Enter to quit"
@@ -416,44 +421,46 @@ if options.setting == 'testbeam' or options.setting == 'default':
 			mapsa.daq().Testbeam_init(clock='glib',calib=0x0)
 		if options.setting == 'default':
 			mapsa.daq().Sequencer_init(0x1,sdur,mem=1)
+			mapsa.daq().header_init()
 		ibuffer=1
 		
 		iread=0
 		cntsperspill = 0
 		while True:
 	  
-
 			buffers_num = a._hw.getNode("Control").getNode('Sequencer').getNode('buffers_num').read()
 			spill = a._hw.getNode("Control").getNode('Sequencer').getNode('spill').read()
 			a._hw.dispatch()
-			#sys.stdout = saveout
+
+			sys.stdout = saveout
+
 			#print buffers_num
-			#sys.stdout = Outf1
+			if False:#buffers_num==4:
+				offs = 0x40000000
+				regs = [0x0,0x1,0x2,0x3,0x80,0x201,0x202,0x203,0x204,0x205]
+				for r in regs:
+					sys.stdout = saveout
+					rval = offs+r
+					print str(hex(rval))
+					val = a._hw.getClient().read(int(rval))
+					a._hw.dispatch()
+					print binary(val)
+
+			sys.stdout = Outf1
+		
 			if buffers_num<4:	
 				shutters+=1
 				iread+=1
 				sys.stdout = saveout
-				print "reading " + str(ibuffer)
-				pix,mem = mapsa.daq().read_data(ibuffer,wait=False)
-				#memsums = [[0]*49,[0]*49,[0]*49,[0]*49,[0]*49,[0]*49]
-				#imem = 0
-				#for m1 in mem:
-				#	memsum = memsums[imem]
-				#	for m in m1:
-				#		for im in range(0,len(m)):
-				#			print im
-				#			print m[im]
-				#		
-				#			memsum[im] += int(m[im])
-				#	imem+=1
-				#	print memsum
 
+				pix,mem = mapsa.daq().read_data(ibuffer,wait=False)
+
+				#print buffers_num
+				sys.stdout = Outf1
 				if options.setting == 'testbeam':
 					total_triggers,trigger_counter,Offset_BEAM,Offset_MPA = mapsa.daq().read_trig(ibuffer)
-				ibuffer+=1
-				if ibuffer >4:
-					ibuffer=1 
-				#continue 
+
+
 				sys.stdout = Outf1
 
 				parray = []
@@ -502,9 +509,10 @@ if options.setting == 'testbeam' or options.setting == 'default':
 					a._hw.dispatch()
 					offset = []
 
-				sys.stdout = saveout
+
 
 				if AR:
+
 					print "Counter output"
 					i=0
 					temp_vars = {}
@@ -560,7 +568,9 @@ if options.setting == 'testbeam' or options.setting == 'default':
 					sys.stdout = Outf1
 
 				tree.Fill()
-
+				ibuffer+=1
+				if ibuffer >4:
+					ibuffer=1 
 				print "---------------------------------------------------------------------------"
 
      			if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
