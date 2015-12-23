@@ -53,10 +53,11 @@ dest	=	'thresh',
 help	=	'threshold')
 
 
-parser.add_option('-T', '--testclock', metavar='F', type='int', action='store',
-default	=	1,
+parser.add_option('-T', '--testclock', metavar='F', type='string', action='store',
+default	=	'glib',
 dest	=	'testclock',
 help	=	'test beam clock')
+
 
 
 parser.add_option('-n', '--number', metavar='F', type='int', action='store',
@@ -90,7 +91,7 @@ help	=	'shutter duration')
 
 
 parser.add_option('-v', '--skip', metavar='F', type='string', action='store',
-default	=	'False',
+default	=	'True',
 dest	=	'skip',
 help	=	'skip zero counts')
 
@@ -176,7 +177,7 @@ if options.readout=='memory':
 shutters=0
 
 cntsperspill = 0.
-startrun=True
+Startspill=True
 
 
 if options.norm == 'False':
@@ -189,7 +190,8 @@ else:
 Endloop = False
 spillnumber = 0
 
-confdict = {'OM':[memmode]*6,'RT':[None]*6,'SCW':[0]*6,'SH2':[None]*6,'SH1':[None]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'PML':[None]*6,'ARL':[AR]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[None]*6,'ARR':[AR]*6,'CER':[CE]*6,'SP':[None]*6,'SR':[SR]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
+confdict = {'OM':[memmode]*6,'RT':[0]*6,'SCW':[0]*6,'SH2':[0]*6,'SH1':[0]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'PML':[1]*6,'ARL':[AR]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[1]*6,'ARR':[AR]*6,'CER':[CE]*6,'SP':[0]*6,'SR':[SR]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
+
 
 if options.record=='True':
 
@@ -207,9 +209,12 @@ if options.record=='True':
 	for s in commands :
 		print 'executing ' + s
 		subprocess.call( [s], shell=True )
-	tree_vars = {}
+	tree_vars = {}			
+	tree_vars["SPILL"] = array('L',[0])
+	#tree_vars["TIMESTAMP"] = array('L',[0])
 	if options.setting == 'testbeam':
 		tree_vars["TRIG_COUNTS_SHUTTER"] = array('L',[0])
+		tree_vars["TRIG_COUNTS_TOTAL_SHUTTER"] = array('L',[0])
 		tree_vars["TRIG_COUNTS_TOTAL"] = array('L',[0])
 		tree_vars["TRIG_OFFSET_BEAM"] = array('L',[0]*2048)
 		tree_vars["TRIG_OFFSET_MPA"] = array('L',[0]*2048)
@@ -255,21 +260,21 @@ else:
 mapsa.daq().Strobe_settings(snum,sdel,slen,sdist,CE)
 if options.setting == 'manual':
 
-
+	bufferdata=[]
 	if options.autospill == 'True':
 		sys.stdout = saveout
-		print "Starting DAQ loop.  Press Enter to start and Enter to quit"
-		raw_input("...")
+		print "Starting DAQ loop.  Press Enter to quit"
+		#raw_input("...")
 		sys.stdout = Outf1
 
 
 	while Endloop == False:
 	    Endspill = False
-	    startrun=True
+	    Startspill=True
 	    while Endspill == False:
 		zeroshutters=0
 		cntsperspill = 0
-		startrun=True
+		Startspill=True
 		spillnumber+=1
 		sys.stdout = saveout
 		print "Starting spill " + str(spillnumber)
@@ -297,6 +302,7 @@ if options.setting == 'manual':
         			break
 			if zeroshutters>=20:
 				print "Spill "+str(spillnumber)
+
 	    			Endspill = True
 				if options.autospill == 'False':
 					Endloop = True
@@ -337,13 +343,13 @@ if options.setting == 'manual':
 			print "Counts this shutter: " +   str(cntspershutter)
 			sys.stdout = Outf1
 			if cntsperspill>100.:
-				startrun=False
+				Startspill=False
 			if cntspershutter == 0 and options.skip=='True':
 				sys.stdout = saveout
 	
 				sys.stdout = Outf1
 
-				if startrun==False:
+				if Startspill==False:
 					zeroshutters+=1
 				continue
 			if AR:
@@ -364,28 +370,54 @@ if options.setting == 'manual':
 
 				sys.stdout = Outf1
 
-			if SR:
-				print "Memory output"
 
-				i=0
-				for memo in marray:
-					print "BX:"+str(memo[0])
-					print "Data:"+str(memo[1])
-					print ""
 
-					sys.stdout = saveout
 
-					BXmemo = np.array(memo[0])	
-					DATAmemo = np.array(memo[1])
-					DATAmemoint = []	
-					for DATAmem in DATAmemo:
-						DATAmemoint.append(long(DATAmem,2)) 
-	
-					temp_vars["SR_BX_MPA_"+str(i)]=BXmemo
-					temp_vars["SR_MPA_"+str(i)]=DATAmemoint
 
-					sys.stdout = Outf1
-					i+=1
+
+
+
+
+
+
+				if SR:
+					print "Memory output"
+
+					i=0
+					for memo in marray:
+
+
+						memfilt0 = []
+						memfilt1 = []
+						for imemo in range(0,len(memo[0])):
+							if memo[0][imemo]==bufferdata[imemo]:
+								break
+							memfilt0.append(memo[0][imemo])
+							memfilt1.append(memo[1][imemo])		
+
+						print "BX:"+str(memfilt0)
+						print "Data:"+str(memfilt1)
+						print ""
+
+						sys.stdout = saveout
+
+						BXmemo = np.array(memfilt0)	
+						DATAmemo = np.array(memfilt1)
+						DATAmemoint = []	
+						for DATAmem in DATAmemo:
+							DATAmemoint.append(long(DATAmem,2)) 
+			
+						temp_vars["SR_BX_MPA_"+str(i)]=BXmemo
+						temp_vars["SR_MPA_"+str(i)]=DATAmemoint
+
+						sys.stdout = Outf1
+						i+=1
+
+					bufferdata=memo[0]
+
+
+
+			temp_vars["SPILL"] = [spillnumber]
 			for tv in tree_vars.keys():
 				sys.stdout = saveout
 				for i in range(0,len(temp_vars[tv])):
@@ -400,10 +432,90 @@ if options.setting == 'manual':
 
 	    F.Write()
 	    F.Close()
+if options.setting == 'strip':
+		sys.stdout = saveout
+		print "Starting DAQ loop.  Press Enter to quit"
+		#raw_input("...")
+		confdict = {'OM':[memmode]*6,'RT':[0]*6,'SCW':[0]*6,'SH2':[0]*6,'SH1':[0]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'PML':[1,0,0,0,0,0],'ARL':[AR]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[0]*6,'ARR':[AR]*6,'CER':[CE]*6,'SP':[0]*6,'SR':[SR]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
+		config = mapsa.config(Config=1,string='calibrated')
+
+		config.upload()
+		config.modifyfull(confdict)  
+
+		#for x in range(1,25):
+		#	config.modifypixel(x,'PML',[1,0,0,0,0,0])
+
+	#	config.modifypixel(1,'PML',[1,0,0,0,0,0])
+		config.upload()
+
+		mapsa.daq().header_init()
+
+		
+
+		iread=0
+		cntsperspill = 0
+		mpasettings = a._hw.getNode("Utility").getNode("MPA_settings").read()
+		mpasettingsread = a._hw.getNode("Utility").getNode("MPA_settings_read").read()
+		#a._hw.getNode("Control").getNode("strip_phase").write(0)
+		#a._hw.getNode("Utility").getNode("MPA_settings").getNode('strip_direction').write(0)
+		a._hw.dispatch()
+		print binary(mpasettings)
+		print binary(mpasettingsread)
+		while True:
+     			if sys.stdin in select.select([sys.stdin], [], [], 0)[0] :
+        			line = raw_input()
+				print "Ending loop"
+	    			Endspill = True
+	    			Endloop = True
+        			break
+			mapsa.daq().Sequencer_init(0x0,sdur,mem=1,ibuff =0)
+			pix,mem = mapsa.daq().read_data(1)
+			print 'reading counts'
+			parray = []
+			for i in range(0,6):
+					pix[i].pop(0)
+					pix[i].pop(0)
+
+					parray.append(pix[i])
+					print pix[i]
+			write1 = a._hw.getNode("Strip").getNode("write_address").getNode("MPA1").read()
+			write2 = a._hw.getNode("Strip").getNode("write_address").getNode("MPA2").read()
+			write3 = a._hw.getNode("Strip").getNode("write_address").getNode("MPA3").read()
+			write4 = a._hw.getNode("Strip").getNode("write_address").getNode("MPA4").read()
+			write5 = a._hw.getNode("Strip").getNode("write_address").getNode("MPA5").read()
+			write6 = a._hw.getNode("Strip").getNode("write_address").getNode("MPA6").read()
+
+			strip1 = a._hw.getNode("Strip").getNode("buffer_in").getNode("MPA1").readBlock(0x400)
+			strip2 = a._hw.getNode("Strip").getNode("buffer_in").getNode("MPA2").readBlock(0x400)
+			strip3 = a._hw.getNode("Strip").getNode("buffer_in").getNode("MPA3").readBlock(0x400)
+			strip4 = a._hw.getNode("Strip").getNode("buffer_in").getNode("MPA4").readBlock(0x400)
+			strip5 = a._hw.getNode("Strip").getNode("buffer_in").getNode("MPA5").readBlock(0x400)
+			strip6 = a._hw.getNode("Strip").getNode("buffer_in").getNode("MPA6").readBlock(0x400)
+
+			a._hw.dispatch()
+			print "MPA1"
+			print write1
+			print strip1
+			#print "MPA2"
+			#print write2
+			#print strip2
+			#print "MPA3"
+			#print write3
+			#print strip3
+			#print "MPA4"
+			#print write4
+			#print strip4
+			#print "MPA5"
+			#print write5
+			#print strip5
+			#print "MPA6"
+			#print write6
+			#print strip6
+
 if options.setting == 'testbeam' or options.setting == 'default':
 		sys.stdout = saveout
-		print "Starting DAQ loop.  Press Enter to start and Enter to quit"
-		raw_input("...")
+		print "Starting DAQ loop.  Press Enter to quit"
+		#raw_input("...")
 		sys.stdout = Outf1
 
 
@@ -416,49 +528,107 @@ if options.setting == 'testbeam' or options.setting == 'default':
 
 	
 		if options.setting == 'testbeam':
+			polltime = 5000
 			a._hw.getNode("Shutter").getNode("time").write(options.shutterdur)
 			a._hw.dispatch()
-			mapsa.daq().Testbeam_init(clock='glib',calib=0x0)
+			mapsa.daq().Testbeam_init(clock=options.testclock ,calib=0x0)
+			mapsa.daq().header_init()
 		if options.setting == 'default':
+			polltime = 200
 			mapsa.daq().Sequencer_init(0x1,sdur,mem=1)
 			mapsa.daq().header_init()
+
+
+
+		time.sleep(0.1)
+		for cbuff in range(1,5):
+			cpix,cmem = mapsa.daq().read_data(cbuff,wait=False)
+			if options.setting == 'testbeam':
+				ctotal_triggers,ctrigger_counter,ctrigger_total_counter,cOffset_BEAM,cOffset_MPA = mapsa.daq().read_trig(cbuff)
+		time.sleep(0.1)
+
+
 		ibuffer=1
 		
 		iread=0
-		cntsperspill = 0
-		while True:
-	  
+
+
+
+	        Endrun = False
+
+		zeroshutters = 0
+
+
+	  	poll =  0
+		while Endrun == False:
+		    Endspill = False
+		    Startspill=True
+		    cntsperspill = 0
+		    spillnumber+=1
+		    sys.stdout = saveout
+		    print "Starting spill " + str(spillnumber)
+		    start = time.time()
+		    sys.stdout = Outf1
+		    print 
+		    print
+		    print "---------------------------------------------------------------------------"
+		    print "-----------------------------Starting spill " + str(spillnumber)+"------------------------------"
+		    print "---------------------------------------------------------------------------"
+		    print
+		    sys.stdout = saveout
+		    while Endspill == False:
+
+
+	
+
 			buffers_num = a._hw.getNode("Control").getNode('Sequencer').getNode('buffers_num').read()
 			spill = a._hw.getNode("Control").getNode('Sequencer').getNode('spill').read()
+			buffers_index = a._hw.getNode("Control").getNode('Sequencer').getNode("buffers_index").read()
 			a._hw.dispatch()
-
 			sys.stdout = saveout
-
 			#print buffers_num
-			if False:#buffers_num==4:
-				offs = 0x40000000
-				regs = [0x0,0x1,0x2,0x3,0x80,0x201,0x202,0x203,0x204,0x205]
-				for r in regs:
-					sys.stdout = saveout
-					rval = offs+r
-					print str(hex(rval))
-					val = a._hw.getClient().read(int(rval))
-					a._hw.dispatch()
-					print binary(val)
 
-			sys.stdout = Outf1
-		
+     			if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
+				 
+				for ibuffer in range(1,5):
+					pix,mem = mapsa.daq().read_data(ibuffer,wait=False)
+				a._hw.getNode("Control").getNode('testbeam_mode').write(0x0)
+        			line = raw_input()
+				print "Ending loop"
+				Endrun = True
+				Endspill = True
+        			break
+
+	  		poll += 1
+
+
+			if poll % polltime == 0:
+		    		sys.stdout = saveout
+				cur = time.time()
+				if Startspill==True:
+					print "Waiting for spill for " +str(cur-start)+ " seconds"
+				if Startspill==False:
+					if cur-start>3.:
+						print "Spill ended"
+						Endspill == True
+						if options.setting == 'testbeam':
+							Endrun = True
+						break
+					else:
+						print "Idle for " +str(cur-start)+ " seconds"
+
 			if buffers_num<4:	
 				shutters+=1
 				iread+=1
 				sys.stdout = saveout
+				#print 	"Buffer index pre trig " + str(buffers_index)
+
+				#time.sleep(0.001)
+				if options.setting == 'testbeam':
+					total_triggers,trigger_counter,trigger_total_counter,Offset_BEAM,Offset_MPA = mapsa.daq().read_trig(ibuffer)
 
 				pix,mem = mapsa.daq().read_data(ibuffer,wait=False)
-
 				#print buffers_num
-				sys.stdout = Outf1
-				if options.setting == 'testbeam':
-					total_triggers,trigger_counter,Offset_BEAM,Offset_MPA = mapsa.daq().read_trig(ibuffer)
 
 
 				sys.stdout = Outf1
@@ -466,6 +636,8 @@ if options.setting == 'testbeam' or options.setting == 'default':
 				parray = []
 				marray = []
 				cntspershutter = 0
+
+
 				for i in range(0,6):
 					pix[i].pop(0)
 					pix[i].pop(0)
@@ -474,40 +646,73 @@ if options.setting == 'testbeam' or options.setting == 'default':
 					sys.stdout = saveout
 					marray.append(mpa[i].daq().read_memory(mem[i],memmode))
 					sys.stdout = Outf1
+
+				if cntspershutter != 0 or options.setting == 'testbeam':
+					print "Reading buffer: " + str(ibuffer)
+					sys.stdout = saveout
+					print "Reading buffer: " + str(ibuffer)
+					sys.stdout = Outf1
+				ibuffer+=1
+				if ibuffer >4:
+					ibuffer=1 
+
+
+				if cntsperspill>60.:
+					Startspill=False
+
+				if cntspershutter == 0 and options.skip=='True' and options.setting != 'testbeam':
+					continue
+
+
+
+				if options.setting == 'testbeam':
+
+					offdat = []
+					#To fix
+					offsetbeam = [0]*2048
+					offsetmpa = [0]*2048
+					sys.stdout = saveout
+
+					for i in range(0,trigger_counter):
+							
+						offsetbeam[i] = Offset_BEAM[i]
+						offdat.append(1000*(Offset_BEAM[i]-Offset_BEAM[0])/26.5)
+						offsetmpa[i] = Offset_MPA[i]
+
+
+
+					sys.stdout = Outf1
+					print "Offset beam: " + str(offsetbeam)
+					print "Offset mpa: " + str(offsetmpa)
+					a._hw.dispatch()
+					offset = []
+
+
+
 				cntsperspill+=cntspershutter
 				sys.stdout = saveout
 				print "Number of Shutters: " + str(shutters)
 				print "Counts Total: " + str(cntsperspill)
 				print "Counts per Shutter: " + str(cntspershutter)
-				print "Reading buffer: " + str(ibuffer)
+
 				if options.setting == 'testbeam':
 					print "Triggers per Shutter: " + str(trigger_counter)	
+					print "Triggers at Shutter Start: " + str(trigger_total_counter)
 					print "Triggers Total: " + str(total_triggers)
+					print "Triggers Total: " + str(hex(total_triggers))
 				print 
 				sys.stdout = Outf1
 				print "Number of Shutters: " + str(shutters)
 				print "Counts Total: " + str(cntsperspill)
 				print "Counts per Shutter: " + str(cntspershutter)
-				print "Reading buffer: " + str(ibuffer)
+
 				if options.setting == 'testbeam':
 					print "Triggers per Shutter: " + str(trigger_counter)	
+					print "Triggers at Shutter Start: " + str(trigger_total_counter)
 					print "Triggers Total: " + str(total_triggers)
 				print 
 
 
-				if options.setting == 'testbeam':
-	
-					offsetbeam = []
-					offsetmpa = []
-					offdat = []
-					for i in range(0,trigger_counter):
-						offsetbeam.append(Offset_BEAM[i])
-						offdat.append(1000*(Offset_BEAM[i]-Offset_BEAM[0])/26.5)
-						offsetmpa.append(Offset_MPA[i])
-					print "Offset beam: " + str(offsetbeam)
-					print "Offset mpa: " + str(offsetmpa)
-					a._hw.dispatch()
-					offset = []
 
 
 
@@ -534,31 +739,74 @@ if options.setting == 'testbeam' or options.setting == 'default':
 					print "Memory output"
 
 					i=0
+					allbx = []
 					for memo in marray:
+
+
+						memfilt0 = []
+						memfilt1 = []
+						sys.stdout = saveout	
+		
+			
+
+						#print memo[0]
+						leng = len(memo[0])
+						for iii in memo[0]:
+							allbx.append(iii)
+
+						sys.stdout = Outf1
 						print "BX:"+str(memo[0])
 						print "Data:"+str(memo[1])
 						print ""
-
 						sys.stdout = saveout
+						#print memo[0]
+						for p in range(0,96):
+							if p>leng:
+								memo[0].append(int(0))
+								memo[1].append('0')
 
 						BXmemo = np.array(memo[0])	
 						DATAmemo = np.array(memo[1])
+
+
+
+						#print BXmemo
 						DATAmemoint = []	
 						for DATAmem in DATAmemo:
 							DATAmemoint.append(long(DATAmem,2)) 
 			
 						temp_vars["SR_BX_MPA_"+str(i)]=BXmemo
 						temp_vars["SR_MPA_"+str(i)]=DATAmemoint
+						#print i
+						sys.stdout = Outf1					
 
-						sys.stdout = Outf1
 						i+=1
+
+					if False:#options.setting == 'testbeam':
+							sys.stdout = saveout
+							print "Matching"
+							print "Trigs"
+							for obeam in offsetbeam:
+								if obeam!=0:
+									print (obeam-offsetbeam[0])*(1./26.5)
+							print "MPAs"
+
+							for bx in sorted(allbx):
+									print (bx)*(1./40.)
+
+							sys.stdout = Outf1
+
+
+
+
 				if options.setting == 'testbeam':
 	
 					temp_vars["TRIG_COUNTS_SHUTTER"] = [trigger_counter]
+					temp_vars["TRIG_COUNTS_TOTAL_SHUTTER"] = [trigger_total_counter]
 					temp_vars["TRIG_COUNTS_TOTAL"] = [total_triggers]
 					temp_vars["TRIG_OFFSET_BEAM"] = offsetbeam
 					temp_vars["TRIG_OFFSET_MPA"] = offsetmpa
-
+				temp_vars["SPILL"] = [spillnumber]
 				for tv in tree_vars.keys():
 					sys.stdout = saveout
 
@@ -568,19 +816,11 @@ if options.setting == 'testbeam' or options.setting == 'default':
 					sys.stdout = Outf1
 
 				tree.Fill()
-				ibuffer+=1
-				if ibuffer >4:
-					ibuffer=1 
+	
 				print "---------------------------------------------------------------------------"
 
-     			if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
-				for ibuffer in range(1,5):
-					pix,mem = mapsa.daq().read_data(ibuffer,wait=False)
-				a._hw.getNode("Control").getNode('testbeam_mode').write(0x0)
-        			line = raw_input()
-				print "Ending loop"
-        			break
-
+	  			poll = 0
+				start = time.time()
 	        F.Write()
 	        F.Close()
 

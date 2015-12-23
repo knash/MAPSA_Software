@@ -15,22 +15,28 @@
     		<node id="total_triggers"            		address="0x00000003"  mask="0x0000FFFFF"   permission="r"    />
     		<node id="halt_time"            		address="0x00000005"  mask="0x0FFFFFFFF"   permission="r"    />
     		<node id="trigger_counter"		    	address="0x00000008"     >
-				<node id="buffer_1"            		address="0x00000000"  mask="0x000007FF"  permission="r"    />
-				<node id="buffer_2"            		address="0x00000001"  mask="0x000007FF"  permission="r"    />
-				<node id="buffer_3"            		address="0x00000002"  mask="0x000007FF"  permission="r"    />
-				<node id="buffer_4"            		address="0x00000003"  mask="0x000007FF"  permission="r"    />
+				<node id="buffer_1"            		address="0x00000000"  mask="0x00000FFF"  permission="r"    />
+				<node id="buffer_2"            		address="0x00000001"  mask="0x00000FFF"  permission="r"    />
+				<node id="buffer_3"            		address="0x00000002"  mask="0x00000FFF"  permission="r"    />
+				<node id="buffer_4"            		address="0x00000003"  mask="0x00000FFF"  permission="r"    />
+    		</node>
+    		<node id="trigger_total_counter"		    	address="0x00000008"     >
+				<node id="buffer_1"            		address="0x00000000"  mask="0xFFFFF000"  permission="r"    />
+				<node id="buffer_2"            		address="0x00000001"  mask="0xFFFFF000"  permission="r"    />
+				<node id="buffer_3"            		address="0x00000002"  mask="0xFFFFF000"  permission="r"    />
+				<node id="buffer_4"            		address="0x00000003"  mask="0xFFFFF000"  permission="r"    />
     		</node>
 		<node id="trigger_offset_BEAM"		    	address="0x0000A000"  >
-				<node id="buffer_1"            		address="0x00000000" mode="incremental" size="0x800"   permission="r"    />
-    				<node id="buffer_2"            		address="0x00000800" mode="incremental" size="0x800"   permission="r"    />
-    				<node id="buffer_3"            		address="0x00001000" mode="incremental" size="0x800"   permission="r"    />
-    				<node id="buffer_4"            		address="0x00001800" mode="incremental" size="0x800"   permission="r"    />
+				<node id="buffer_1"            		address="0x00000000" mode="incremental" size="0x800"   permission="rw"    />
+    				<node id="buffer_2"            		address="0x00000800" mode="incremental" size="0x800"   permission="rw"    />
+    				<node id="buffer_3"            		address="0x00001000" mode="incremental" size="0x800"   permission="rw"    />
+    				<node id="buffer_4"            		address="0x00001800" mode="incremental" size="0x800"   permission="rw"    />
     		</node>
 		<node id="trigger_offset_MPA"		    	address="0x0000C000"  >
-				<node id="buffer_1"            		address="0x00000000" mode="incremental" size="0x800"   permission="r"    />
-    				<node id="buffer_2"            		address="0x00000800" mode="incremental" size="0x800"   permission="r"    />
-    				<node id="buffer_3"            		address="0x00001000" mode="incremental" size="0x800"   permission="r"    />
-    				<node id="buffer_4"            		address="0x00001800" mode="incremental" size="0x800"   permission="r"    />
+				<node id="buffer_1"            		address="0x00000000" mode="incremental" size="0x800"   permission="rw"    />
+    				<node id="buffer_2"            		address="0x00000800" mode="incremental" size="0x800"   permission="rw"    />
+    				<node id="buffer_3"            		address="0x00001000" mode="incremental" size="0x800"   permission="rw"    />
+    				<node id="buffer_4"            		address="0x00001800" mode="incremental" size="0x800"   permission="rw"    />
     		</node>
     		<node id="Sequencer" address="0x00000080">
     			<node id="buffers_index"    			mask="0x0000000C"  permission="rw"    />
@@ -80,12 +86,12 @@
 
 	<node id="Strip">
     		<node id="buffer_in"            		address="0x00002000" permission="r"    >
-    			<node id="MPA1"            			address="0x00000000" mode="incremental" size="0x3FF"  permission="r"    />
-    			<node id="MPA2"            			address="0x00000400" mode="incremental" size="0x3FF"  permission="r"    />
-    			<node id="MPA3"            			address="0x00000800" mode="incremental" size="0x3FF"  permission="r"    />
-    			<node id="MPA4"            			address="0x00000c00" mode="incremental" size="0x3FF"  permission="r"    />
-    			<node id="MPA5"            			address="0x00001000" mode="incremental" size="0x3FF"  permission="r"    />
-    			<node id="MPA6"            			address="0x00001400" mode="incremental" size="0x3FF"  permission="r"    />
+    			<node id="MPA1"            			address="0x00000000" mode="incremental" size="0x400"  permission="r"    />
+    			<node id="MPA2"            			address="0x00000400" mode="incremental" size="0x400"  permission="r"    />
+    			<node id="MPA3"            			address="0x00000800" mode="incremental" size="0x400"  permission="r"    />
+    			<node id="MPA4"            			address="0x00000c00" mode="incremental" size="0x400"  permission="r"    />
+    			<node id="MPA5"            			address="0x00001000" mode="incremental" size="0x400"  permission="r"    />
+    			<node id="MPA6"            			address="0x00001400" mode="incremental" size="0x400"  permission="r"    />
 		</node>    	
 		<node id="write_address"            	address="0x00003800"  >
     			<node id="MPA1"            			address="0x00000000" mask="0x0000FFF"  permission="r"    />

@@ -114,6 +114,23 @@ class MPA_daq:
 		data = []
 		bend = []
 		
+
+		if (mode == 1):
+			for x in range(0,96):
+				if (memory[x][0:16] == '00000000'):
+					break
+				BX.append(int(memory[x][0:16],2))
+				nrow = [int(memory[x][16:21],2), int(memory[x][23:28],2), int(memory[x][30:35],2), int(memory[x][37:42],2), int(memory[x][44:49],2), int(memory[x][51:56],2), int(memory[x][58:63],2), int(memory[x][65:70],2)]
+				#nrow = filter(lambda a: a !=0, nrow)
+				ncol = [int(memory[x][21:23],2), int(memory[x][28:30],2), int(memory[x][35:37],2), int(memory[x][42:44],2), int(memory[x][49:51],2), int(memory[x][56:58],2), int(memory[x][63:65],2), int(memory[x][70:72],2)] 
+				ncol = filter(lambda a: a !=0, ncol)
+				if (ncol != []):
+					nrow = nrow[8-len(ncol):8]
+					col.append(ncol)
+					row.append(nrow)
+			data = [row,col]
+		
+
 		if (mode == 2):
 			for x in range(0,96):
 				if (memory[x][0:16] == '00000000'):

@@ -97,13 +97,14 @@ class MAPSA_daq:
 	def read_trig(self,buffer_num=1):
 
 
-		total_triggers = a._hw.getNode("Control").getNode('total_triggers').read()
-		trigger_counter = a._hw.getNode("Control").getNode('trigger_counter').getNode('buffer_'+str(buffer_num)).read()
-		Offset_BEAM = a._hw.getNode("Control").getNode('trigger_offset_BEAM').getNode('buffer_'+str(buffer_num)).readBlock(2048)
-		Offset_MPA = a._hw.getNode("Control").getNode('trigger_offset_MPA').getNode('buffer_'+str(buffer_num)).readBlock(2048)
-		a._hw.dispatch()
+		total_triggers = self._hw.getNode("Control").getNode('total_triggers').read()
+		trigger_counter = self._hw.getNode("Control").getNode('trigger_counter').getNode('buffer_'+str(buffer_num)).read()
+		trigger_total_counter = self._hw.getNode("Control").getNode('trigger_total_counter').getNode('buffer_'+str(buffer_num)).read()
+		Offset_BEAM = self._hw.getNode("Control").getNode('trigger_offset_BEAM').getNode('buffer_'+str(buffer_num)).readBlock(2048)
+		Offset_MPA = self._hw.getNode("Control").getNode('trigger_offset_MPA').getNode('buffer_'+str(buffer_num)).readBlock(2048)
+		self._hw.dispatch()
 
-		return total_triggers,trigger_counter,Offset_BEAM,Offset_MPA
+		return total_triggers,trigger_counter,trigger_total_counter,Offset_BEAM,Offset_MPA
 
 	def read_memory(self,mode,buffer_num=1):
 		BXs = [] 
@@ -132,26 +133,26 @@ class MAPSA_daq:
 		#time.sleep(0.001)
 	
 
-	def Testbeam_init(self,clock='glib'):
+	def Testbeam_init(self,clock='glib',calib=0x0):
 		if clock=='glib':
 			clkset=0x0
 		if clock=='testbeam':
 			clkset=0x1
 		#self._hw.getNode("Control").getNode('testbeam_calibration').write(calib)
+		#self._Sequencer.getNode('buffers_index').write(0x0)
 		self._hw.getNode("Control").getNode('testbeam_clock').write(clkset)
 		self._hw.getNode("Control").getNode('testbeam_mode').write(0x1)
 		self._hw.dispatch()
 
-
 			
-	def Sequencer_init(self,smode,sdur,mem=1):
+	def Sequencer_init(self,smode,sdur,mem=1,ibuff =0,sdir=0):
 		self._shuttertime.write(sdur)	
-		self._hw.dispatch()		
+	
 		self._hw.getNode("Control").getNode('testbeam_mode').write(0x0)
 		self._read.write(mem)
 		self._hw.dispatch()		
 		self._Sequencer.getNode('datataking_continuous').write(smode)
-		self._Sequencer.getNode('buffers_index').write(0x0)
+		self._Sequencer.getNode('buffers_index').write(ibuff)
 		self._hw.dispatch()
 
 		#self._waitsequencer()

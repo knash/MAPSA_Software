@@ -13,9 +13,9 @@ class TBeamControl:
         self.readout = 'both'
         self.formatstring = 'noprocessing'
         self.threshold = '90'
-        self.testbeam_clock = '1'
+        self.testbeam_clock = 'glib'
         self.title = 'none'
-        self.shutter_duration = '1000000' 
+        self.shutter_duration = '500000' 
         self.normalize = 'False'
         
     def exit(self):
