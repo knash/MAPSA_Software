@@ -481,10 +481,10 @@ if options.setting == 'strip':
 			stripread = a._hw.getNode("Strip").getNode("enable").read()
 			a._hw.dispatch()
 			print "new event"
-			mpasettings = a._hw.getNode("Utility").getNode("MPA_settings").read()
+			mpasettingsread = a._hw.getNode("Utility").getNode("MPA_settings_read").read()
 			a._hw.dispatch()
 			print "MPA settings"
-			print binary(mpasettings)
+			print binary(mpasettingsread)
 			print "strip enable register"
 			print binary(stripread)
 			print "config"
