@@ -1,14 +1,15 @@
 #
 # Simple command launcher for testbeam   -JD 12-8-2015
 #
-
+import sys, select, os, array,subprocess
 from Tkinter import *
 #import serial
 import time
-import os
+
 
 class TBeamControl:
     def __init__(self):
+
         self.setting = 'default'
         self.readout = 'both'
         self.formatstring = 'noprocessing'
@@ -17,7 +18,10 @@ class TBeamControl:
         self.title = 'none'
         self.shutter_duration = '500000' 
         self.normalize = 'False'
-        
+        self.direction = 'glib'
+
+
+
     def exit(self):
         print("Exit by Exit button in UI\n") 
         sys.exit(0)
@@ -48,10 +52,13 @@ class TBeamControl:
         self.title = e6.get()
         self.shutter_duration = e7.get()
         self.normalize = e8.get()
-        commandstring = "python daq.py -s %s -r %s -f %s -t %s -T %s -y %s -w %s -N %s" % (self.setting, self.readout, self.formatstring, self.threshold, self.testbeam_clock, self.title, self.shutter_duration, self.normalize)
+        self.direction = e9.get()
+        commandstring = "python daq.py -s %s -r %s -f %s -t %s -T %s -y %s -w %s -N %s -D %s" % (self.setting, self.readout, self.formatstring, self.threshold, self.testbeam_clock, self.title, self.shutter_duration, self.normalize,self.direction)
+	print("pushing function " + commandstring)
         os.system(commandstring) 
 
     
+
 
 tbeam = TBeamControl()
 root = Tk()
@@ -125,13 +132,28 @@ e8=Entry(tbeamui)
 e8.insert(10,tbeam.normalize);
 e8.grid(row=10,column=2,pady=5)
 
+
+lab9 =  Label(tbeamui, width=20,text="Strip direction",anchor='w')
+lab9.grid(row=11,column=1,pady=5)
+e9=Entry(tbeamui)
+e9.insert(10,tbeam.direction);
+e9.grid(row=11,column=2,pady=5)
+
+
 button_calibration = Button(tbeamui, text="Run Calibration")
 button_calibration["command"]=lambda: tbeam.calibration()
-button_calibration.grid(row=11,column=1, pady=5)
+button_calibration.grid(row=12,column=1, pady=5)
 
 button_daq = Button(tbeamui, text="Run DAQ")
 button_daq["command"]=lambda: tbeam.daq()
-button_daq.grid(row=11,column=2, pady=5)
+button_daq.grid(row=12,column=2, pady=5)
+
+commands = 	[
+			'export LD_LIBRARY_PATH=/opt/cactus/lib:$LD_LIBRARY_PATH',
+			'export PATH=/opt/cactus/bin:$PATH'
+		]
+for s in commands :
+		subprocess.call( [s], shell=True )
 
 
 root.mainloop()

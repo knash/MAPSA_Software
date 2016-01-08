@@ -105,6 +105,11 @@ default	=	'False',
 dest	=	'norm',
 help	=	'use normalization mpa scheme')
 
+parser.add_option('-D', '--direction', metavar='F', type='string', action='store',
+default	=	'glib',
+dest	=	'direction',
+help	=	'strip direction (glib or mpa)')
+
 
 (options, args) = parser.parse_args()
 
@@ -436,18 +441,16 @@ if options.setting == 'strip':
 		sys.stdout = saveout
 		print "Starting DAQ loop.  Press Enter to quit"
 		#raw_input("...")
-		confdict = {'OM':[memmode]*6,'RT':[0]*6,'SCW':[0]*6,'SH2':[0]*6,'SH1':[0]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'PML':[1,0,0,0,0,0],'ARL':[AR]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[0]*6,'ARR':[AR]*6,'CER':[CE]*6,'SP':[0]*6,'SR':[SR]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
+		confdict = {'OM':[memmode]*6,'RT':[0]*6,'SCW':[0]*6,'SH2':[0]*6,'SH1':[0]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'PML':[0,1,0,0,0,0],'ARL':[AR]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[0,1,0,0,0,0],'ARR':[AR]*6,'CER':[CE]*6,'SP':[0]*6,'SR':[SR]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
 		config = mapsa.config(Config=1,string='calibrated')
-
 		config.upload()
+
 		config.modifyfull(confdict)  
 
-		#for x in range(1,25):
-		#	config.modifypixel(x,'PML',[1,0,0,0,0,0])
-
-	#	config.modifypixel(1,'PML',[1,0,0,0,0,0])
 		config.upload()
-
+ 	#	config._confs[0].modifypixel( ['PMR'], 5, 1)
+ 	#	config._confs[0].upload()
+		a._hw.dispatch()
 		mapsa.daq().header_init()
 
 		
@@ -461,23 +464,52 @@ if options.setting == 'strip':
 		a._hw.dispatch()
 		print binary(mpasettings)
 		print binary(mpasettingsread)
+		print options.direction
+		#if options.direction=='glib':
+		#	print "writing glib"
+		#	a._hw.getNode("Strip").getNode("enable_TEMP").write(0x00)
+		#	a._hw.dispatch()
+		#if options.direction=='mpa':
+		#	print "writing mpa"
+		a._hw.getNode("Strip").getNode("enable").write(0x3F)
+		a._hw.dispatch()
+
+		read1 = a._hw.getNode("Strip").getNode("enable").read()
+		a._hw.dispatch()
+		print binary(read1)
 		while True:
+			stripread = a._hw.getNode("Strip").getNode("enable").read()
+			a._hw.dispatch()
+			print "new event"
+			mpasettings = a._hw.getNode("Utility").getNode("MPA_settings").read()
+			a._hw.dispatch()
+			print "MPA settings"
+			print binary(mpasettings)
+			print "strip enable register"
+			print binary(stripread)
+			print "config"
+			print confdict
      			if sys.stdin in select.select([sys.stdin], [], [], 0)[0] :
         			line = raw_input()
 				print "Ending loop"
 	    			Endspill = True
 	    			Endloop = True
         			break
-			mapsa.daq().Sequencer_init(0x0,sdur,mem=1,ibuff =0)
+			mapsa.daq().Sequencer_init(0x0,sdur,mem=1)
 			pix,mem = mapsa.daq().read_data(1)
 			print 'reading counts'
 			parray = []
+			marray = []
 			for i in range(0,6):
 					pix[i].pop(0)
 					pix[i].pop(0)
 
 					parray.append(pix[i])
+
+					#marray.append(mpa[i].daq().read_memory(mem[i],memmode))
+
 					print pix[i]
+			#print mem[1]
 			write1 = a._hw.getNode("Strip").getNode("write_address").getNode("MPA1").read()
 			write2 = a._hw.getNode("Strip").getNode("write_address").getNode("MPA2").read()
 			write3 = a._hw.getNode("Strip").getNode("write_address").getNode("MPA3").read()
@@ -492,25 +524,70 @@ if options.setting == 'strip':
 			strip5 = a._hw.getNode("Strip").getNode("buffer_in").getNode("MPA5").readBlock(0x400)
 			strip6 = a._hw.getNode("Strip").getNode("buffer_in").getNode("MPA6").readBlock(0x400)
 
-			a._hw.dispatch()
+
+			out1 = a._hw.getNode("Strip").getNode("buffer_out").getNode("MPA1").read()
+			out2 = a._hw.getNode("Strip").getNode("buffer_out").getNode("MPA2").read()
+			out3 = a._hw.getNode("Strip").getNode("buffer_out").getNode("MPA3").read()
+			out4 = a._hw.getNode("Strip").getNode("buffer_out").getNode("MPA4").read()
+			out5 = a._hw.getNode("Strip").getNode("buffer_out").getNode("MPA5").read()
+			out6 = a._hw.getNode("Strip").getNode("buffer_out").getNode("MPA6").read()
+
+		        a._hw.dispatch()
+			stripf = []
+			for strip in [strip1,strip2,strip3,strip4,strip5,strip6]:
+				temparr = []
+				for iel in range(0,len(strip)):
+					temparr.append(binary(strip[iel]))	
+				stripf.append(temparr)
+					
+
+
 			print "MPA1"
-			print write1
-			print strip1
-			#print "MPA2"
-			#print write2
-			#print strip2
-			#print "MPA3"
-			#print write3
-			#print strip3
-			#print "MPA4"
-			#print write4
-			#print strip4
-			#print "MPA5"
-			#print write5
-			#print strip5
-			#print "MPA6"
-			#print write6
-			#print strip6
+			print "strip write address"
+			print hex(write1)
+			print "strip buffer"
+			print stripf[0][0]
+			print "out buffer"
+			print out1
+			print "MPA2"
+			print "strip write address"
+			print hex(write2)
+
+			print binary(write2)
+			print "strip words"
+			print write2>>2
+			print "strip buffer"
+			print stripf[1]
+			print "out buffer"
+			print out2
+			print "MPA3"
+			print "strip write address"
+			print hex(write3)
+			print "strip buffer"
+			print stripf[2][0]
+			print "out buffer"
+			print out3
+			print "MPA4"
+			print "strip write address"
+			print hex(write4)
+			print "strip buffer"
+			print stripf[3][0]
+			print "out buffer"
+			print out4
+			print "MPA5"
+			print "strip write address"
+			print hex(write5)
+			print "strip buffer"
+			print stripf[4][0]
+			print "out buffer"
+			print out5
+			print "MPA6"
+			print "strip write address"
+			print hex(write6)
+			print "strip buffer"
+			print stripf[5][0]
+			print "out buffer"
+			print out6
 
 if options.setting == 'testbeam' or options.setting == 'default':
 		sys.stdout = saveout

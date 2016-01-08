@@ -122,8 +122,10 @@ class MAPSA_config:
 			elif any(['PML' in key,'ARL' in key,'CEL' in key,'CW' in key,'PMR' in key,'ARR' in key,'CER' in key,'SP' in key,'SR' in key,'TRIMDACL' in key,'TRIMDACR' in key]):
 	
 				for x in range(1,25):
-					self.modifypixel(x,key,whichs[key])
-	
+					#if x==6 and key=='PML':
+					#	self.modifypixel(x,key,[0,1,0,0,0,0])
+					#else:
+						self.modifypixel(x,key,whichs[key])
 		self.write()
 
 
