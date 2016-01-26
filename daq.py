@@ -1,4 +1,3 @@
-
 from classes import *
 import elementtree.ElementTree 
 from xml.dom import minidom
@@ -127,7 +126,6 @@ a._hw.dispatch()
 print "Running firmware version " + str(firmver)
 
 
-
 sdur = options.shutterdur
 
 snum = options.number
@@ -140,14 +138,15 @@ sdist = 0xFF
 formarr = ['stubfinding','stripemulator' ,'centroid','noprocessing']
 memmode = formarr.index(options.format)
 
-a._hw.getNode("Control").getNode("logic_reset").write(0x1)
-a._hw.dispatch()
+#a._hw.getNode("Control").getNode("logic_reset").write(0x1)
+#a._hw.dispatch()
 a._hw.getNode("Control").getNode("MPA_clock_enable").write(0x1)
 a._hw.dispatch()
 
 mpa_number = options.mpa
 mpa_index = mpa_number-1
 nmpas=1
+
 
 mpa = []  
 for i in range(1,7):
@@ -162,6 +161,7 @@ if options.daqstring!='':
 	dstr= '_'+options.daqstring
 
 foldername = 'daqout_'+options.setting+'_'+options.format+'_'+timestr+dstr
+
 
 CE=0
 if options.calib == 'True':
@@ -196,7 +196,6 @@ Endloop = False
 spillnumber = 0
 
 confdict = {'OM':[memmode]*6,'RT':[0]*6,'SCW':[0]*6,'SH2':[0]*6,'SH1':[0]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'PML':[1]*6,'ARL':[AR]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[1]*6,'ARR':[AR]*6,'CER':[CE]*6,'SP':[0]*6,'SR':[SR]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
-
 
 if options.record=='True':
 
@@ -481,9 +480,13 @@ if options.setting == 'strip':
 			stripread = a._hw.getNode("Strip").getNode("enable").read()
 			a._hw.dispatch()
 			print "new event"
+			mpasettings = a._hw.getNode("Utility").getNode("MPA_settings").read()
+
 			mpasettingsread = a._hw.getNode("Utility").getNode("MPA_settings_read").read()
 			a._hw.dispatch()
 			print "MPA settings"
+			print binary(mpasettings)
+			print "MPA settings read"
 			print binary(mpasettingsread)
 			print "strip enable register"
 			print binary(stripread)

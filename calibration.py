@@ -60,8 +60,8 @@ a._hw.dispatch()
 print "Running firmware version " + str(read)
 
 
-a._hw.getNode("Control").getNode("logic_reset").write(0x1)
-a._hw.dispatch()
+#a._hw.getNode("Control").getNode("logic_reset").write(0x1)
+#a._hw.dispatch()
 a._hw.getNode("Control").getNode("MPA_clock_enable").write(0x1)
 a._hw.dispatch()
 
