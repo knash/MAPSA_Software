@@ -19,6 +19,7 @@ class TBeamControl:
         self.shutter_duration = '500000' 
         self.normalize = 'False'
         self.direction = 'glib'
+        self.loops = '-1'
 
 
 
@@ -53,7 +54,8 @@ class TBeamControl:
         self.shutter_duration = e7.get()
         self.normalize = e8.get()
         self.direction = e9.get()
-        commandstring = "python daq.py -s %s -r %s -f %s -t %s -T %s -y %s -w %s -N %s -D %s" % (self.setting, self.readout, self.formatstring, self.threshold, self.testbeam_clock, self.title, self.shutter_duration, self.normalize,self.direction)
+        self.loops = e9.get()
+        commandstring = "python daq.py -s %s -r %s -f %s -t %s -T %s -y %s -w %s -N %s -D %s -L %s" % (self.setting, self.readout, self.formatstring, self.threshold, self.testbeam_clock, self.title, self.shutter_duration, self.normalize,self.direction,self.loops)
 	print("pushing function " + commandstring)
         os.system(commandstring) 
 
@@ -67,7 +69,7 @@ tbeamui.grid()
 
 
 root.title("Simple TestBeam script launcher")
-root.geometry("420x450");
+root.geometry("420x500");
 #text_box = Entry(tbeamui, justify=RIGHT)
 #text_box.grid(row = 0, column = 0, columnspan = 3, pady = 5)
 #text_box.insert(0, "0")
@@ -139,14 +141,20 @@ e9=Entry(tbeamui)
 e9.insert(10,tbeam.direction);
 e9.grid(row=11,column=2,pady=5)
 
+lab10 =  Label(tbeamui, width=20,text="Number of shutters",anchor='w')
+lab10.grid(row=12,column=1,pady=5)
+e9=Entry(tbeamui)
+e9.insert(10,tbeam.loops);
+e9.grid(row=12,column=2,pady=5)
+
 
 button_calibration = Button(tbeamui, text="Run Calibration")
 button_calibration["command"]=lambda: tbeam.calibration()
-button_calibration.grid(row=12,column=1, pady=5)
+button_calibration.grid(row=13,column=1, pady=5)
 
 button_daq = Button(tbeamui, text="Run DAQ")
 button_daq["command"]=lambda: tbeam.daq()
-button_daq.grid(row=12,column=2, pady=5)
+button_daq.grid(row=13,column=2, pady=5)
 
 commands = 	[
 			'export LD_LIBRARY_PATH=/opt/cactus/lib:$LD_LIBRARY_PATH',

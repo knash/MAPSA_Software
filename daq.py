@@ -109,6 +109,12 @@ default	=	'glib',
 dest	=	'direction',
 help	=	'strip direction (glib or mpa)')
 
+parser.add_option('-L', '--loops', metavar='F', type='int', action='store',
+default	=	-1,
+dest	=	'loops',
+help	=	'number of daq loops')
+
+
 
 (options, args) = parser.parse_args()
 
@@ -197,6 +203,7 @@ spillnumber = 0
 
 confdict = {'OM':[memmode]*6,'RT':[0]*6,'SCW':[0]*6,'SH2':[0]*6,'SH1':[0]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'PML':[1]*6,'ARL':[AR]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[1]*6,'ARR':[AR]*6,'CER':[CE]*6,'SP':[0]*6,'SR':[SR]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
 
+
 if options.record=='True':
 
 	timestr = datetime.datetime.now().time().isoformat().replace(":","").replace(".","")
@@ -259,7 +266,7 @@ if options.record=='True':
 else:	
 	Outf1 = saveout
 
-
+Kill=False
 
 mapsa.daq().Strobe_settings(snum,sdel,slen,sdist,CE)
 if options.setting == 'manual':
@@ -440,7 +447,7 @@ if options.setting == 'strip':
 		sys.stdout = saveout
 		print "Starting DAQ loop.  Press Enter to quit"
 		#raw_input("...")
-		confdict = {'OM':[memmode]*6,'RT':[0]*6,'SCW':[0]*6,'SH2':[0]*6,'SH1':[0]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'PML':[0,1,0,0,0,0],'ARL':[AR]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[0,1,0,0,0,0],'ARR':[AR]*6,'CER':[CE]*6,'SP':[0]*6,'SR':[SR]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
+		confdict = {'OM':[memmode]*6,'RT':[0]*6,'SCW':[0]*6,'SH2':[0]*6,'SH1':[0]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'PML':[1,1,1,1,1,1],'ARL':[AR]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[1,1,1,1,1,1],'ARR':[AR]*6,'CER':[CE]*6,'SP':[0]*6,'SR':[SR]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
 		config = mapsa.config(Config=1,string='calibrated')
 		config.upload()
 
@@ -461,9 +468,7 @@ if options.setting == 'strip':
 		#a._hw.getNode("Control").getNode("strip_phase").write(0)
 		#a._hw.getNode("Utility").getNode("MPA_settings").getNode('strip_direction').write(0)
 		a._hw.dispatch()
-		print binary(mpasettings)
-		print binary(mpasettingsread)
-		print options.direction
+
 		#if options.direction=='glib':
 		#	print "writing glib"
 		#	a._hw.getNode("Strip").getNode("enable_TEMP").write(0x00)
@@ -475,8 +480,21 @@ if options.setting == 'strip':
 
 		read1 = a._hw.getNode("Strip").getNode("enable").read()
 		a._hw.dispatch()
-		print binary(read1)
+		numloops=0
+
 		while True:
+			if options.loops!=-1:
+				if numloops>=options.loops:
+					Kill=True
+     			if sys.stdin in select.select([sys.stdin], [], [], 0)[0] or Kill:
+        			line = raw_input()
+				print "Ending loop"
+	    			Endspill = True
+	    			Endloop = True
+        			break
+
+
+
 			stripread = a._hw.getNode("Strip").getNode("enable").read()
 			a._hw.dispatch()
 			print "new event"
@@ -490,14 +508,11 @@ if options.setting == 'strip':
 			print binary(mpasettingsread)
 			print "strip enable register"
 			print binary(stripread)
-			print "config"
+			print "Current Configuration:"
 			print confdict
-     			if sys.stdin in select.select([sys.stdin], [], [], 0)[0] :
-        			line = raw_input()
-				print "Ending loop"
-	    			Endspill = True
-	    			Endloop = True
-        			break
+			print 
+			
+
 			mapsa.daq().Sequencer_init(0x0,sdur,mem=1)
 			pix,mem = mapsa.daq().read_data(1)
 			print 'reading counts'
@@ -527,7 +542,6 @@ if options.setting == 'strip':
 			strip5 = a._hw.getNode("Strip").getNode("buffer_in").getNode("MPA5").readBlock(0x400)
 			strip6 = a._hw.getNode("Strip").getNode("buffer_in").getNode("MPA6").readBlock(0x400)
 
-
 			out1 = a._hw.getNode("Strip").getNode("buffer_out").getNode("MPA1").read()
 			out2 = a._hw.getNode("Strip").getNode("buffer_out").getNode("MPA2").read()
 			out3 = a._hw.getNode("Strip").getNode("buffer_out").getNode("MPA3").read()
@@ -544,53 +558,66 @@ if options.setting == 'strip':
 				stripf.append(temparr)
 					
 
-
+			print 
 			print "MPA1"
 			print "strip write address"
 			print hex(write1)
-			print "strip buffer"
+			print "first two strip buffer words"
 			print stripf[0][0]
+			print stripf[0][1]
 			print "out buffer"
 			print out1
+			print 
 			print "MPA2"
 			print "strip write address"
 			print hex(write2)
-
-			print binary(write2)
-			print "strip words"
-			print write2>>2
-			print "strip buffer"
-			print stripf[1]
+			#print "strip words"
+			#print write2>>2
+			print "first two strip buffer words"
+			print stripf[1][0]
+			print stripf[1][1]
 			print "out buffer"
 			print out2
+			print 
 			print "MPA3"
 			print "strip write address"
 			print hex(write3)
-			print "strip buffer"
+			print "first two strip buffer words"
 			print stripf[2][0]
+			print stripf[2][1]
 			print "out buffer"
 			print out3
+			print 
 			print "MPA4"
 			print "strip write address"
 			print hex(write4)
-			print "strip buffer"
+			print "first two strip buffer words"
 			print stripf[3][0]
+			print stripf[3][1]
 			print "out buffer"
 			print out4
+			print 
 			print "MPA5"
 			print "strip write address"
 			print hex(write5)
-			print "strip buffer"
+			print "first two strip buffer words"
 			print stripf[4][0]
+			print stripf[4][1]
 			print "out buffer"
 			print out5
+			print 
 			print "MPA6"
 			print "strip write address"
 			print hex(write6)
-			print "strip buffer"
+			print "first two strip buffer words"
 			print stripf[5][0]
+			print stripf[5][1]
 			print "out buffer"
 			print out6
+			print 
+			print "-------------------------------"
+			print 
+			numloops+=1
 
 if options.setting == 'testbeam' or options.setting == 'default':
 		sys.stdout = saveout
