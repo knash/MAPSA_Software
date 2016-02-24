@@ -443,19 +443,25 @@ if options.setting == 'manual':
 
 	    F.Write()
 	    F.Close()
+
 if options.setting == 'strip':
 		sys.stdout = saveout
 		print "Starting DAQ loop.  Press Enter to quit"
 		#raw_input("...")
-		confdict = {'OM':[memmode]*6,'RT':[0]*6,'SCW':[0]*6,'SH2':[0]*6,'SH1':[0]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'PML':[1,1,1,1,1,1],'ARL':[AR]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[1,1,1,1,1,1],'ARR':[AR]*6,'CER':[CE]*6,'SP':[0]*6,'SR':[SR]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
+		confdict = {'OM':[memmode]*6,'RT':[0]*6,'SCW':[0]*6,'SH2':[0]*6,'SH1':[0]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'PML':[0,0,0,0,0,0],'ARL':[AR]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[0,0,0,0,0,0],'ARR':[AR]*6,'CER':[CE]*6,'SP':[0]*6,'SR':[SR]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
+
 		config = mapsa.config(Config=1,string='calibrated')
 		config.upload()
-
 		config.modifyfull(confdict)  
-
 		config.upload()
- 	#	config._confs[0].modifypixel( ['PMR'], 5, 1)
- 	#	config._confs[0].upload()
+		a._hw.dispatch()
+		confdict = {'OM':[memmode]*6,'RT':[0]*6,'SCW':[0]*6,'SH2':[0]*6,'SH1':[0]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'PML':[1,0,0,0,0,0],'ARL':[AR]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[0,0,0,0,0,0],'ARR':[AR]*6,'CER':[CE]*6,'SP':[0]*6,'SR':[SR]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
+		config.modifyfull(confdict,pixels=[5,6])  
+		config.upload()
+		a._hw.dispatch()
+ 		#config.modifypixel( 5,['PML'],[1]*6)
+ 		#config._confs[0].upload()
+		#config.upload()
 		a._hw.dispatch()
 		mapsa.daq().header_init()
 
@@ -495,22 +501,38 @@ if options.setting == 'strip':
 
 
 
-			stripread = a._hw.getNode("Strip").getNode("enable").read()
+
+
+
+
+			confdict = {'OM':[memmode]*6,'RT':[0]*6,'SCW':[0]*6,'SH2':[0]*6,'SH1':[0]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'PML':[0,0,0,0,0,0],'ARL':[AR]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[0,0,0,0,0,0],'ARR':[AR]*6,'CER':[CE]*6,'SP':[0]*6,'SR':[SR]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
+			config.modifyfull(confdict)  
+			config.upload()
 			a._hw.dispatch()
+			confdict = {'OM':[memmode]*6,'RT':[0]*6,'SCW':[0]*6,'SH2':[0]*6,'SH1':[0]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'PML':[1,0,0,0,0,0],'ARL':[AR]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[0,0,0,0,0,0],'ARR':[AR]*6,'CER':[CE]*6,'SP':[0]*6,'SR':[SR]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
+			
+			config.modifyfull(confdict,pixels=[numloops,numloops+1])  
+			config.upload()
+			a._hw.dispatch()
+
+
+			stripread = a._hw.getNode("Strip").getNode("enable").read()
 			print "new event"
+			a._hw.getNode("Control").getNode("full_flag").write(0x1)
+			a._hw.dispatch()
 			mpasettings = a._hw.getNode("Utility").getNode("MPA_settings").read()
 
 			mpasettingsread = a._hw.getNode("Utility").getNode("MPA_settings_read").read()
 			a._hw.dispatch()
-			print "MPA settings"
-			print binary(mpasettings)
-			print "MPA settings read"
-			print binary(mpasettingsread)
-			print "strip enable register"
-			print binary(stripread)
-			print "Current Configuration:"
-			print confdict
-			print 
+			#print "MPA settings"
+			#print binary(mpasettings)
+			#print "MPA settings read"
+			#print binary(mpasettingsread)
+			#print "strip enable register"
+			#print binary(stripread)
+			#print "Current Configuration:"
+			#print confdict
+			#print 
 			
 
 			mapsa.daq().Sequencer_init(0x0,sdur,mem=1)
@@ -518,7 +540,7 @@ if options.setting == 'strip':
 			print 'reading counts'
 			parray = []
 			marray = []
-			for i in range(0,6):
+			"""for i in range(0,6):
 					pix[i].pop(0)
 					pix[i].pop(0)
 
@@ -526,7 +548,25 @@ if options.setting == 'strip':
 
 					#marray.append(mpa[i].daq().read_memory(mem[i],memmode))
 
-					print pix[i]
+					print pix[i]"""
+
+
+			for i in range(0,1):
+					pix[i].pop(0)
+					pix[i].pop(0)
+
+					#marray.append(mpa[i].daq().read_memory(mem[i],memmode))
+					rows = [0]*16,[0]*16,[0]*16
+					for ipixel in range(0,len(pix[i])):
+						if 0<ipixel<16:
+							rows[0][ipixel]= pix[i][ipixel]
+						if 16<ipixel<31:
+							rows[1][31-ipixel]= pix[i][ipixel]
+						if 31<ipixel<46:
+							rows[2][-31+ipixel]= pix[i][ipixel]
+					for r in rows:
+						print str(r).replace('[','').replace(']','').replace(',','')
+
 			#print mem[1]
 			write1 = a._hw.getNode("Strip").getNode("write_address").getNode("MPA1").read()
 			write2 = a._hw.getNode("Strip").getNode("write_address").getNode("MPA2").read()
@@ -551,73 +591,234 @@ if options.setting == 'strip':
 
 		        a._hw.dispatch()
 			stripf = []
+			print "counts"
 			for strip in [strip1,strip2,strip3,strip4,strip5,strip6]:
 				temparr = []
 				for iel in range(0,len(strip)):
-					temparr.append(binary(strip[iel]))	
+					temparr.append(binary(strip[iel])[-16:])	
 				stripf.append(temparr)
 					
 
 			print 
-			print "MPA1"
-			print "strip write address"
-			print hex(write1)
-			print "first two strip buffer words"
-			print stripf[0][0]
-			print stripf[0][1]
-			print "out buffer"
-			print out1
+			#print "MPA1"
+			#print "strip write address"
+			#print hex(write1)
+			#print "number of strip words"
+			#print write1>>2
+			print "strips"
+			#print stripf[0][1]
+			#print 
+			for strip in stripf[0]:
+				if strip!='0000000000000000':
+					print strip
+					break
+			#print stripf[0][0]
+			#print stripf[0][1]
+		#	print "out buffer"
+		#	print out1
 			print 
-			print "MPA2"
+			"""print "MPA2"
 			print "strip write address"
 			print hex(write2)
 			#print "strip words"
 			#print write2>>2
-			print "first two strip buffer words"
-			print stripf[1][0]
-			print stripf[1][1]
+			print "strip words"
+			for strip in stripf[1]:
+				if strip!='0000000000000000':
+					print strip
 			print "out buffer"
 			print out2
 			print 
 			print "MPA3"
 			print "strip write address"
 			print hex(write3)
-			print "first two strip buffer words"
-			print stripf[2][0]
-			print stripf[2][1]
+			print "strip words"
+			for strip in stripf[2]:
+				if strip!='0000000000000000':
+					print strip
 			print "out buffer"
 			print out3
 			print 
 			print "MPA4"
 			print "strip write address"
 			print hex(write4)
-			print "first two strip buffer words"
-			print stripf[3][0]
-			print stripf[3][1]
+			print "strip words"
+			for strip in stripf[3]:
+				if strip!='0000000000000000':
+					print strip
 			print "out buffer"
 			print out4
 			print 
 			print "MPA5"
 			print "strip write address"
 			print hex(write5)
-			print "first two strip buffer words"
-			print stripf[4][0]
-			print stripf[4][1]
+			print "strip words"
+			for strip in stripf[4]:
+				if strip!='0000000000000000':
+					print strip
 			print "out buffer"
 			print out5
 			print 
 			print "MPA6"
 			print "strip write address"
 			print hex(write6)
-			print "first two strip buffer words"
-			print stripf[5][0]
-			print stripf[5][1]
+			print "strip words"
+			for strip in stripf[5]:
+				if strip!='0000000000000000':
+					print strip
 			print "out buffer"
 			print out6
 			print 
 			print "-------------------------------"
-			print 
+			print """
 			numloops+=1
+
+
+
+
+if options.setting == 'stripinput':
+		sys.stdout = saveout
+		print "Starting DAQ loop.  Press Enter to quit"
+		#raw_input("...")
+		confdict = {'OM':[memmode]*6,'RT':[0]*6,'SCW':[0]*6,'SH2':[0]*6,'SH1':[0]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'PML':[1,1,1,1,1,1],'ARL':[AR]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[1,1,1,1,1,1],'ARR':[AR]*6,'CER':[CE]*6,'SP':[0]*6,'SR':[SR]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
+
+		config = mapsa.config(Config=1,string='calibrated')
+		config.upload()
+		config.modifyfull(confdict)  
+		config.upload()
+		a._hw.dispatch()
+ 		#config.modifypixel( 5,['PML'],[1]*6)
+ 		#config._confs[0].upload()
+		#config.upload()
+		#a._hw.dispatch()
+		mapsa.daq().header_init()
+
+		
+
+		iread=0
+		cntsperspill = 0
+		#mpasettingsread = a._hw.getNode("Utility").getNode("MPA_settings_read").read()
+		#a._hw.getNode("Control").getNode("strip_phase").write(0)
+		a._hw.getNode("Utility").getNode("MPA_settings").getNode('strip_direction').write(0x3F)
+		a._hw.dispatch()
+
+		a._hw.getNode("Strip").getNode("enable").write(0x0)
+		a._hw.dispatch()
+
+		sphase = 0
+		numloops=0
+		while True:
+			print sphase
+			sphase+=1
+    			a._hw.getNode("Control").getNode("strip_phase").write(sphase)
+			if options.loops!=-1:
+				if numloops>=options.loops:
+					Kill=True
+     			if sys.stdin in select.select([sys.stdin], [], [], 0)[0] or Kill:
+        			line = raw_input()
+				print "Ending loop"
+	    			Endspill = True
+	    			Endloop = True
+        			break
+
+
+
+
+
+
+
+			#confdict = {'OM':[memmode]*6,'RT':[1]*6,'SCW':[1]*6,'SH2':[2]*6,'SH1':[2]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'PML':[0,0,0,0,0,0],'ARL':[AR]*6,'CEL':[CE]*6,'CW':[2]*6,'PMR':[0,0,0,0,0,0],'ARR':[AR]*6,'CER':[CE]*6,'SP':[0]*6,'SR':[SR]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
+			#config.modifyfull(confdict)  
+			#config.upload()
+			#a._hw.dispatch()
+			#confdict = {'OM':[memmode]*6,'RT':[1]*6,'SCW':[1]*6,'SH2':[2]*6,'SH1':[2]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'PML':[1,1,1,1,1,1],'ARL':[AR]*6,'CEL':[CE]*6,'CW':[2]*6,'PMR':[1,1,1,1,1,1],'ARR':[AR]*6,'CER':[CE]*6,'SP':[0]*6,'SR':[SR]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
+			
+			#config.modifyfull(confdict,pixels=[numloops,numloops+1])  
+			#config.upload()
+			#a._hw.dispatch()
+
+
+			print "new event"
+			#a._hw.getNode("Control").getNode("full_flag").write(0x1)
+			#a._hw.dispatch()
+			#mpasettings = a._hw.getNode("Utility").getNode("MPA_settings").read()
+			#mpasettingsread = a._hw.getNode("Utility").getNode("MPA_settings_read").read()
+			#a._hw.dispatch()
+			#print "MPA settings"
+			#print binary(mpasettings)
+			#print "MPA settings read"
+			#print binary(mpasettingsread)
+			#print "strip enable register"
+			#print binary(stripread)
+			#print "Current Configuration:"
+			#print confdict
+			#print 
+		
+			a._hw.getNode("Utility").getNode("MPA_settings").getNode('strip_direction').write(0x3F)
+			a._hw.dispatch()
+
+			a._hw.getNode("Strip").getNode("buffer_out").getNode("MPA1").write(0x810)
+			a._hw.getNode("Strip").getNode("buffer_out").getNode("MPA2").write(0x810)
+			a._hw.getNode("Strip").getNode("buffer_out").getNode("MPA3").write(0x810)
+			a._hw.getNode("Strip").getNode("buffer_out").getNode("MPA4").write(0x810)
+			a._hw.getNode("Strip").getNode("buffer_out").getNode("MPA5").write(0x810)
+			a._hw.getNode("Strip").getNode("buffer_out").getNode("MPA6").write(0x810)
+		        a._hw.dispatch()
+			a._hw.getNode("Strip").getNode("write").write(0x3F)
+			a._hw.dispatch()
+			mapsa.daq().Sequencer_init(0x0,sdur,mem=1)
+			pix,mem = mapsa.daq().read_data(1)
+			print 'reading counts'
+			parray = []
+			marray = []
+			for i in range(0,6):
+					pix[i].pop(0)
+					pix[i].pop(0)
+
+					parray.append(pix[i])
+
+					marray.append(mpa[i].daq().read_memory(mem[i],memmode))
+
+			print marray
+
+			for i in range(0,1):
+
+					#pix[i].pop(0)
+					#pix[i].pop(0)
+
+					#marray.append(mpa[i].daq().read_memory(mem[i],memmode))
+					rows = [0]*16,[0]*16,[0]*16
+					for ipixel in range(0,len(pix[i])):
+
+						if 0<=ipixel<16:
+							rows[0][ipixel]= pix[i][ipixel]
+						if 16<=ipixel<32:
+							rows[1][31-ipixel]= pix[i][ipixel]
+						if 32<=ipixel<48:
+							rows[2][-32+ipixel]= pix[i][ipixel]
+					for r in rows:
+						print str(r).replace('[','').replace(']','').replace(',','')
+			for me in mem:
+				for m in me:
+					if m!='000000000000000000000000000000000000000000000000000000000000000000000000' and m!='00000000000000000000000000000000000000000000000000000000000000000000000':
+						print m
+
+			#a._hw.getNode("Strip").getNode("buffer_out").getNode("MPA1").write(0xFFFF)
+			#a._hw.getNode("Strip").getNode("buffer_out").getNode("MPA2").write(0xFFFF)
+			#a._hw.getNode("Strip").getNode("buffer_out").getNode("MPA3").write(0xFFFF)
+			#a._hw.getNode("Strip").getNode("buffer_out").getNode("MPA4").write(0xFFFF)
+			#a._hw.getNode("Strip").getNode("buffer_out").getNode("MPA5").write(0xFFFF)
+			#a._hw.getNode("Strip").getNode("buffer_out").getNode("MPA6").write(0xFFFF)
+
+
+			stripf = []
+
+
+			print 
+			
+			numloops+=1
+
+
 
 if options.setting == 'testbeam' or options.setting == 'default':
 		sys.stdout = saveout

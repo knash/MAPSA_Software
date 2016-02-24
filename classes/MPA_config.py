@@ -138,6 +138,7 @@ class MPA_config:
 		else:	
 			for px in pixel:
 				if int(px.attrib['n']) == which:
+					#print which
 					px.find(what).text = str(value)
 
 	def modifyperiphery(self, what, value):

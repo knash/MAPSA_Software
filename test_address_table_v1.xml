@@ -2,6 +2,7 @@
 <node id="Glib" address="0x40000000">
 	<node id="Control">
     		<node id="logic_reset"            		address="0x00000000"  mask="0x00000001"   permission="w"    />
+    		<node id="full_flag"            		address="0x00000000"  mask="0x00000004"   permission="w"    />
     		<node id="firm_ver"            			address="0x00000000"  mask="0xFFFF0000"   permission="r"    />
     		<node id="strip_phase"		    		address="0x00000001"  mask="0x000001FF"  permission="rw"    />
 

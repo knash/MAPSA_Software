@@ -86,8 +86,9 @@ class MAPSA_daq:
 		self._hw.dispatch()
 		#start = time.time()
 		for i in range(0,len(counts)):
-			#print mems[i]
+		#	print mems[i]
 			#print counts[i]
+			
 			counts[i],mems[i] = MPA(self._hw,i).daq().format(counts[i],mems[i])
 		#end = time.time()
 		#print "Formatting "

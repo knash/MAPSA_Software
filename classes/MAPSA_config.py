@@ -109,10 +109,8 @@ class MAPSA_config:
 
 
 
-	def modifyfull(self, whichs):
-				
-
-
+	def modifyfull(self, whichs,pixels=[1,25]):
+	
 
 		for key in whichs.keys():
 			if whichs[key] == [None]*6:
@@ -121,7 +119,7 @@ class MAPSA_config:
 				self.modifyperiphery(key,whichs[key])
 			elif any(['PML' in key,'ARL' in key,'CEL' in key,'CW' in key,'PMR' in key,'ARR' in key,'CER' in key,'SP' in key,'SR' in key,'TRIMDACL' in key,'TRIMDACR' in key]):
 	
-				for x in range(1,25):
+				for x in range(pixels[0],pixels[1]):
 					#if x==6 and key=='PML':
 					#	self.modifypixel(x,key,[0,1,0,0,0,0])
 					#else:
