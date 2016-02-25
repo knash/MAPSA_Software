@@ -681,7 +681,7 @@ if options.setting == 'stripinput':
 		print "Starting DAQ loop.  Press Enter to quit"
 		#raw_input("...")
 		confdict = {'OM':[memmode]*6,'RT':[0]*6,'SCW':[0]*6,'SH2':[0]*6,'SH1':[0]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'PML':[1,1,1,1,1,1],'ARL':[AR]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[1,1,1,1,1,1],'ARR':[AR]*6,'CER':[CE]*6,'SP':[0]*6,'SR':[SR]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
-
+		breakout=False
 		config = mapsa.config(Config=1,string='calibrated')
 		config.upload()
 		config.modifyfull(confdict)  
@@ -708,9 +708,13 @@ if options.setting == 'stripinput':
 		sphase = 0
 		numloops=0
 		while True:
-			print sphase
+			#print sphase
 			sphase+=1
+			if sphase>375:
+				sphase=0
     			a._hw.getNode("Control").getNode("strip_phase").write(sphase)
+			a._hw.dispatch()
+			print sphase
 			if options.loops!=-1:
 				if numloops>=options.loops:
 					Kill=True
@@ -771,6 +775,7 @@ if options.setting == 'stripinput':
 			print 'reading counts'
 			parray = []
 			marray = []
+			#print mem
 			for i in range(0,6):
 					pix[i].pop(0)
 					pix[i].pop(0)
@@ -781,7 +786,7 @@ if options.setting == 'stripinput':
 
 			print marray
 
-			for i in range(0,1):
+			for i in range(0,6):
 
 					#pix[i].pop(0)
 					#pix[i].pop(0)
@@ -799,10 +804,14 @@ if options.setting == 'stripinput':
 					for r in rows:
 						print str(r).replace('[','').replace(']','').replace(',','')
 			for me in mem:
+				print me[0]
 				for m in me:
 					if m!='000000000000000000000000000000000000000000000000000000000000000000000000' and m!='00000000000000000000000000000000000000000000000000000000000000000000000':
 						print m
+						breakout=True
 
+			if breakout:
+				break
 			#a._hw.getNode("Strip").getNode("buffer_out").getNode("MPA1").write(0xFFFF)
 			#a._hw.getNode("Strip").getNode("buffer_out").getNode("MPA2").write(0xFFFF)
 			#a._hw.getNode("Strip").getNode("buffer_out").getNode("MPA3").write(0xFFFF)
