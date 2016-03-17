@@ -72,13 +72,13 @@ class MPA_daq:
 
 
 		(memory_data,counter_data)= self.read_raw(buffer_num,dcindex,wait)
+		
+		return counter_data,memory_data
+		#pix,mem	= MPA_daq.format(counter_data,memory_data)
+		#return pix,mem	
 
-			
-		pix,mem	= MPA_daq.format(counter_data,memory_data)
-		return pix,mem	
 
-
-	def format(self,counter_data,memory_data):
+	def format(self,counter_data,memory_data,Fast=False):
 
 
 		pix = [None]*50
@@ -92,15 +92,32 @@ class MPA_daq:
 			pix[2*x]  = int((counter_data[x] >> shift1) & 0xffff)
 			pix[2*x+1]= int((counter_data[x] >> shift2) & 0xffff)
 
-
+		if Fast:
+			return pix,memory_data
 		memory_string = ''
-
+		
 		for x in range(0,216):
 			memory_string = memory_string + str(binary(memory_data[215 - x]))
 		
 		for x in range(0,96):
-			mem[x] = memory_string [x*72+1 : x*72+72+1]			
+			mem[x] = memory_string [x*72 : x*72+72]			
 		return pix,mem	
+
+
+	def formatmem(self,memory_data):
+
+
+		mem = [None]*96
+		memory_string = ''
+		
+		for x in range(0,216):
+
+			memory_string = memory_string + str(binary(memory_data[215 - x]))
+		
+		for x in range(0,96):
+			mem[x] = memory_string [x*72 : x*72+72]			
+		return mem	
+
 
 
 
@@ -172,11 +189,11 @@ class MPA_daq:
 				if (memory[x][0:8] == '00000000'):
 					break
 				#print memory[x]
-		#		print memory[x][0:8]
-		#		print memory[x][8:24]
-		#		print memory[x][24:72]
-		#		print 
-		#		print 
+				#print memory[x][0:8]
+				#print memory[x][8:24]
+				#print memory[x][24:72]
+				#print 
+				#print 
 				BX.append(int(memory[x][8:24],2))
 				hit.append(memory [x][24:72])		
 		

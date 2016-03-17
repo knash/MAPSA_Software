@@ -68,7 +68,7 @@ class MAPSA_daq:
 			self._Readout.getNode("Header").getNode("MPA"+str(i)).write(0xFFFFFFF0+i)
 			self._hw.dispatch()
 
-	def read_data(self,buffer_num=1,wait=True):
+	def read_data(self,buffer_num=1,wait=True,Fast=False):
 		counts = []  
 		mems = []  
 
@@ -84,15 +84,13 @@ class MAPSA_daq:
 			counts.append(counter_data) 
 			mems.append(memory_data)
 		self._hw.dispatch()
-		#start = time.time()
+
+
 		for i in range(0,len(counts)):
-		#	print mems[i]
-			#print counts[i]
-			
-			counts[i],mems[i] = MPA(self._hw,i).daq().format(counts[i],mems[i])
-		#end = time.time()
-		#print "Formatting "
-		#print (end - start)*1000
+			counts[i],mems[i] = MPA(self._hw,i).daq().format(counts[i],mems[i],Fast)
+
+
+
 		return counts,mems
 
 	def read_trig(self,buffer_num=1):

@@ -115,6 +115,13 @@ dest	=	'loops',
 help	=	'number of daq loops')
 
 
+parser.add_option('-p', '--phase', metavar='F', type='int', action='store',
+default	=	0,
+dest	=	'phase',
+help	=	'beam phase offset')
+
+
+
 
 (options, args) = parser.parse_args()
 
@@ -202,7 +209,7 @@ Endloop = False
 spillnumber = 0
 
 confdict = {'OM':[memmode]*6,'RT':[0]*6,'SCW':[0]*6,'SH2':[0]*6,'SH1':[0]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'PML':[1]*6,'ARL':[AR]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[1]*6,'ARR':[AR]*6,'CER':[CE]*6,'SP':[0]*6,'SR':[SR]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
-
+vararr = []
 
 if options.record=='True':
 
@@ -332,7 +339,7 @@ if options.setting == 'manual':
 
 			#print mem
 			sys.stdout = saveout
-			pix,mem = mapsa.daq().read_data(1)
+			pix,mem = mapsa.daq().read_data(1,True,True)
 			sys.stdout = Outf1
 			parray = []
 			marray = []
@@ -344,8 +351,8 @@ if options.setting == 'manual':
 					parray.append(pix[i])
 
 					sys.stdout = saveout
-					marray.append(mpa[i].daq().read_memory(mem[i],memmode))
-
+					#marray.append(mpa[i].daq().read_memory(mem[i],memmode))
+					marray.append(mem[i])
 					sys.stdout = Outf1
 					cntsperspill += sum(pix[i])
 					cntspershutter += sum(pix[i])
@@ -356,7 +363,7 @@ if options.setting == 'manual':
 			if cntsperspill>100.:
 				Startspill=False
 			if cntspershutter == 0 and options.skip=='True':
-				sys.stdout = saveout
+				
 	
 				sys.stdout = Outf1
 
@@ -395,31 +402,9 @@ if options.setting == 'manual':
 					print "Memory output"
 
 					i=0
-					for memo in marray:
-
-
-						memfilt0 = []
-						memfilt1 = []
-						for imemo in range(0,len(memo[0])):
-							if memo[0][imemo]==bufferdata[imemo]:
-								break
-							memfilt0.append(memo[0][imemo])
-							memfilt1.append(memo[1][imemo])		
-
-						print "BX:"+str(memfilt0)
-						print "Data:"+str(memfilt1)
-						print ""
-
-						sys.stdout = saveout
-
-						BXmemo = np.array(memfilt0)	
-						DATAmemo = np.array(memfilt1)
-						DATAmemoint = []	
-						for DATAmem in DATAmemo:
-							DATAmemoint.append(long(DATAmem,2)) 
+					for memo in marray: 
 			
-						temp_vars["SR_BX_MPA_"+str(i)]=BXmemo
-						temp_vars["SR_MPA_"+str(i)]=DATAmemoint
+						temp_vars["SR_UN_MPA_"+str(i)]=memo
 
 						sys.stdout = Outf1
 						i+=1
@@ -429,18 +414,59 @@ if options.setting == 'manual':
 
 
 			temp_vars["SPILL"] = [spillnumber]
-			for tv in tree_vars.keys():
-				sys.stdout = saveout
-				for i in range(0,len(temp_vars[tv])):
-					tree_vars[tv][i] = temp_vars[tv][i]
+			vararr.append(temp_vars)
+			#for tv in tree_vars.keys():
+			#	sys.stdout = saveout
+			#	for i in range(0,len(temp_vars[tv])):
+			#		tree_vars[tv][i] = temp_vars[tv][i]
 	
-				sys.stdout = Outf1
+			#	sys.stdout = Outf1
 
-			tree.Fill()
+			#tree.Fill()
 
 			print "---------------------------------------------------------------------------"
-		
+	    sys.stdout = saveout
+	    print "Writing events to tree..."
 
+
+
+	    nev = 0
+	    for ev in vararr:
+		nev+=1
+		print nev
+		for impa in range(0,len(mpa)):
+			
+			mem[impa] = mpa[impa].daq().formatmem(ev["SR_UN_MPA_"+str(impa)])
+			memo = mpa[impa].daq().read_memory(mem[impa],memmode)
+
+
+
+			for p in range(0,96):
+				if p>len(memo[0]):
+					memo[0].append(int(0))
+					memo[1].append('0')
+
+				BXmemo = np.array(memo[0])	
+				DATAmemo = np.array(memo[1])
+
+				DATAmemoint = []	
+				for DATAmem in DATAmemo:
+					DATAmemoint.append(long(DATAmem,2)) 
+			
+
+			ev["SR_BX_MPA_"+str(impa)] = BXmemo
+			ev["SR_MPA_"+str(impa)] = DATAmemoint
+
+
+
+
+
+		for tv in tree_vars.keys():
+			if 'SR_UN_MPA' in tv:
+				continue 
+			for i in range(0,len(ev[tv])):
+				tree_vars[tv][i] = ev[tv][i]
+			tree.Fill()
 	    F.Write()
 	    F.Close()
 
@@ -874,9 +900,14 @@ if options.setting == 'testbeam' or options.setting == 'default':
 	        Endrun = False
 
 		zeroshutters = 0
-
+		numloops=0
 
 	  	poll =  0
+		a._hw.getNode("Control").getNode("shutter_delay").write(options.phase)
+		a._hw.dispatch()
+		a._hw.getNode("Control").getNode("beam_on").write(0x1)
+		a._hw.dispatch()
+
 		while Endrun == False:
 		    Endspill = False
 		    Startspill=True
@@ -904,8 +935,10 @@ if options.setting == 'testbeam' or options.setting == 'default':
 			a._hw.dispatch()
 			sys.stdout = saveout
 			#print buffers_num
-
-     			if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
+			if options.loops!=-1:
+				if numloops>=options.loops:
+					Kill=True
+     			if sys.stdin in select.select([sys.stdin], [], [], 0)[0] or Kill:
 				 
 				for ibuffer in range(1,5):
 					pix,mem = mapsa.daq().read_data(ibuffer,wait=False)
@@ -933,7 +966,7 @@ if options.setting == 'testbeam' or options.setting == 'default':
 						break
 					else:
 						print "Idle for " +str(cur-start)+ " seconds"
-
+			#if True:
 			if buffers_num<4:	
 				shutters+=1
 				iread+=1
@@ -944,7 +977,7 @@ if options.setting == 'testbeam' or options.setting == 'default':
 				if options.setting == 'testbeam':
 					total_triggers,trigger_counter,trigger_total_counter,Offset_BEAM,Offset_MPA = mapsa.daq().read_trig(ibuffer)
 
-				pix,mem = mapsa.daq().read_data(ibuffer,wait=False)
+				pix,mem = mapsa.daq().read_data(ibuffer,wait=False,Fast=True)
 				#print buffers_num
 
 
@@ -961,7 +994,8 @@ if options.setting == 'testbeam' or options.setting == 'default':
 					parray.append(pix[i])
 					cntspershutter+=sum(pix[i])
 					sys.stdout = saveout
-					marray.append(mpa[i].daq().read_memory(mem[i],memmode))
+					#marray.append(mpa[i].daq().read_memory(mem[i],memmode))
+					marray.append(mem[i])
 					sys.stdout = Outf1
 
 				if cntspershutter != 0 or options.setting == 'testbeam':
@@ -1058,61 +1092,11 @@ if options.setting == 'testbeam' or options.setting == 'default':
 					i=0
 					allbx = []
 					for memo in marray:
-
-
-						memfilt0 = []
-						memfilt1 = []
-						sys.stdout = saveout	
-		
-			
-
-						#print memo[0]
-						leng = len(memo[0])
-						for iii in memo[0]:
-							allbx.append(iii)
-
-						sys.stdout = Outf1
-						print "BX:"+str(memo[0])
-						print "Data:"+str(memo[1])
-						print ""
-						sys.stdout = saveout
-						#print memo[0]
-						for p in range(0,96):
-							if p>leng:
-								memo[0].append(int(0))
-								memo[1].append('0')
-
-						BXmemo = np.array(memo[0])	
-						DATAmemo = np.array(memo[1])
-
-
-
-						#print BXmemo
-						DATAmemoint = []	
-						for DATAmem in DATAmemo:
-							DATAmemoint.append(long(DATAmem,2)) 
-			
-						temp_vars["SR_BX_MPA_"+str(i)]=BXmemo
-						temp_vars["SR_MPA_"+str(i)]=DATAmemoint
-						#print i
-						sys.stdout = Outf1					
+						temp_vars["SR_UN_MPA_"+str(i)]=memo				
 
 						i+=1
 
-					if False:#options.setting == 'testbeam':
-							sys.stdout = saveout
-							print "Matching"
-							print "Trigs"
-							for obeam in offsetbeam:
-								if obeam!=0:
-									print (obeam-offsetbeam[0])*(1./26.5)
-							print "MPAs"
-
-							for bx in sorted(allbx):
-									print (bx)*(1./40.)
-
-							sys.stdout = Outf1
-
+				
 
 
 
@@ -1124,20 +1108,70 @@ if options.setting == 'testbeam' or options.setting == 'default':
 					temp_vars["TRIG_OFFSET_BEAM"] = offsetbeam
 					temp_vars["TRIG_OFFSET_MPA"] = offsetmpa
 				temp_vars["SPILL"] = [spillnumber]
-				for tv in tree_vars.keys():
-					sys.stdout = saveout
+				vararr.append(temp_vars)
 
-					for i in range(0,len(temp_vars[tv])):
-						tree_vars[tv][i] = temp_vars[tv][i]
+				#for tv in tree_vars.keys():
+				#	sys.stdout = saveout
+
+				#	for i in range(0,len(temp_vars[tv])):
+				#		tree_vars[tv][i] = temp_vars[tv][i]
 	
-					sys.stdout = Outf1
+				#	sys.stdout = Outf1
 
-				tree.Fill()
+				#tree.Fill()
 	
 				print "---------------------------------------------------------------------------"
-
+				numloops+=1
 	  			poll = 0
-				start = time.time()
+				#start = time.time()
+	    	print "Writing events to tree..."
+
+	    	nev = 0
+	    	for ev in vararr:
+			nev+=1
+			if nev%20==0:
+
+				print nev
+			for impa in range(0,len(mpa)):
+				
+				#print ev["SR_UN_MPA_"+str(impa)]
+				#print len(ev["SR_UN_MPA_"+str(impa)])
+				mem[impa] = mpa[impa].daq().formatmem(ev["SR_UN_MPA_"+str(impa)])
+
+				memo = mpa[impa].daq().read_memory(mem[impa],memmode)
+
+
+
+				for p in range(0,96):
+
+					if p>len(memo[0]):
+						memo[0].append(int(0))
+						memo[1].append('0')
+
+				BXmemo = np.array(memo[0])	
+				DATAmemo = np.array(memo[1])
+
+				DATAmemoint = []	
+				for DATAmem in DATAmemo:
+					DATAmemoint.append(long(DATAmem,2)) 
+	
+				ev["SR_BX_MPA_"+str(impa)] = BXmemo
+				ev["SR_MPA_"+str(impa)] = DATAmemoint
+
+
+
+
+
+			for tv in tree_vars.keys():
+				if 'SR_UN_MPA' in tv:
+					continue 
+				for i in range(0,len(ev[tv])):
+					tree_vars[tv][i] = ev[tv][i]
+				tree.Fill()
+
+		a._hw.getNode("Control").getNode("beam_on").write(0x0)
+		a._hw.dispatch()
+
 	        F.Write()
 	        F.Close()
 

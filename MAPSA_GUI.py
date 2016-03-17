@@ -20,6 +20,7 @@ class TBeamControl:
         self.normalize = 'False'
         self.direction = 'glib'
         self.loops = '-1'
+        self.phase = '0'
 
 
 
@@ -54,8 +55,9 @@ class TBeamControl:
         self.shutter_duration = e7.get()
         self.normalize = e8.get()
         self.direction = e9.get()
-        self.loops = e9.get()
-        commandstring = "python daq.py -s %s -r %s -f %s -t %s -T %s -y %s -w %s -N %s -D %s -L %s" % (self.setting, self.readout, self.formatstring, self.threshold, self.testbeam_clock, self.title, self.shutter_duration, self.normalize,self.direction,self.loops)
+        self.loops = e10.get()
+        self.phase = e11.get()
+        commandstring = "python daq.py -s %s -r %s -f %s -t %s -T %s -y %s -w %s -N %s -D %s -L %s -p %s" % (self.setting, self.readout, self.formatstring, self.threshold, self.testbeam_clock, self.title, self.shutter_duration, self.normalize,self.direction,self.loops,self.phase)
 	print("pushing function " + commandstring)
         os.system(commandstring) 
 
@@ -66,6 +68,8 @@ tbeam = TBeamControl()
 root = Tk()
 tbeamui = Frame(root)
 tbeamui.grid()
+
+subprocess.call( ['source Setup.sh'], shell=True )
 
 
 root.title("Simple TestBeam script launcher")
@@ -143,18 +147,25 @@ e9.grid(row=11,column=2,pady=5)
 
 lab10 =  Label(tbeamui, width=20,text="Number of shutters",anchor='w')
 lab10.grid(row=12,column=1,pady=5)
-e9=Entry(tbeamui)
-e9.insert(10,tbeam.loops);
-e9.grid(row=12,column=2,pady=5)
+e10=Entry(tbeamui)
+e10.insert(10,tbeam.loops);
+e10.grid(row=12,column=2,pady=5)
+
+lab11 =  Label(tbeamui, width=20,text="Shutter phase delay",anchor='w')
+lab11.grid(row=13,column=1,pady=5)
+e11=Entry(tbeamui)
+e11.insert(10,tbeam.phase);
+e11.grid(row=13,column=2,pady=5)
+
 
 
 button_calibration = Button(tbeamui, text="Run Calibration")
 button_calibration["command"]=lambda: tbeam.calibration()
-button_calibration.grid(row=13,column=1, pady=5)
+button_calibration.grid(row=14,column=1, pady=5)
 
 button_daq = Button(tbeamui, text="Run DAQ")
 button_daq["command"]=lambda: tbeam.daq()
-button_daq.grid(row=13,column=2, pady=5)
+button_daq.grid(row=14,column=2, pady=5)
 
 commands = 	[
 			'export LD_LIBRARY_PATH=/opt/cactus/lib:$LD_LIBRARY_PATH',
