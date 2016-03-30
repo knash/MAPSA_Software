@@ -62,6 +62,13 @@ class TBeamControl:
         os.system(commandstring) 
 
     
+commands = 	[
+			'export LD_LIBRARY_PATH=/opt/cactus/lib:$LD_LIBRARY_PATH',
+			'export PATH=/opt/cactus/bin:$PATH',
+			'source Setup.sh'
+		]
+for s in commands :
+		subprocess.call( [s], shell=True )
 
 
 tbeam = TBeamControl()
@@ -69,7 +76,7 @@ root = Tk()
 tbeamui = Frame(root)
 tbeamui.grid()
 
-subprocess.call( ['source Setup.sh'], shell=True )
+
 
 
 root.title("Simple TestBeam script launcher")
@@ -167,12 +174,6 @@ button_daq = Button(tbeamui, text="Run DAQ")
 button_daq["command"]=lambda: tbeam.daq()
 button_daq.grid(row=14,column=2, pady=5)
 
-commands = 	[
-			'export LD_LIBRARY_PATH=/opt/cactus/lib:$LD_LIBRARY_PATH',
-			'export PATH=/opt/cactus/bin:$PATH'
-		]
-for s in commands :
-		subprocess.call( [s], shell=True )
 
 
 root.mainloop()

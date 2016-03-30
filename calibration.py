@@ -98,14 +98,14 @@ else:
 	CE=0
 SP=0
 
-
+nshut = 1
 
 
 config = mapsa.config(Config=1,string='default')
 config.upload()
 
 
-confdict = {'OM':[3]*6,'RT':[0]*6,'SCW':[0]*6,'SH2':[0]*6,'SH1':[0]*6,'THDAC':[0]*6,'CALDAC':[options.charge]*6,'PML':[1]*6,'ARL':[1]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[1]*6,'ARR':[1]*6,'CER':[CE]*6,'SP':[SP]*6,'SR':[1]*6,'TRIMDACL':[30]*6,'TRIMDACR':[30]*6}
+confdict = {'OM':[3]*6,'RT':[0]*6,'SCW':[0]*6,'SH2':[0]*6,'SH1':[0]*6,'THDAC':[0]*6,'CALDAC':[options.charge]*6,'PML':[1]*6,'ARL':[1]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[1]*6,'ARR':[1]*6,'CER':[CE]*6,'SP':[SP]*6,'SR':[1]*6,'TRIMDACL':[31]*6,'TRIMDACR':[31]*6}
 config.modifyfull(confdict) 
 
 mapsa.daq().Strobe_settings(snum,sdel,slen,sdist,cal=CE)
@@ -283,8 +283,8 @@ c1.Print('plots/Scurve_Calibration'+options.string+'_pre.root', 'root')
 c1.Print('plots/Scurve_Calibration'+options.string+'_pre.pdf', 'pdf')
 c1.Print('plots/Scurve_Calibration'+options.string+'_pre.png', 'png')
 config.modifyperiphery('THDAC',[100]*6)
-config.upload()
-config.write()
+#config.upload()
+#config.write()
 for i in range(0,6):
 	xmlrootfile = config._confsxmltree[i]
 	print xmlrootfile
@@ -316,7 +316,6 @@ for x in range(1,25):
 	config1.modifypixel(x,'CER', [CE]*6)
 	config1.modifypixel(x,'SP',  [SP]*6) 
 	config1.modifypixel(x,'SR',  [1]*6) 
-
 
 config1.write()
 

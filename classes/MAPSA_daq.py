@@ -132,7 +132,7 @@ class MAPSA_daq:
 		#time.sleep(0.001)
 	
 
-	def Testbeam_init(self,clock='glib',calib=0x0):
+	def Testbeam_init(self,clock='glib',calib=0x0,phase=0x0):
 		if clock=='glib':
 			clkset=0x0
 		if clock=='testbeam':
@@ -141,6 +141,10 @@ class MAPSA_daq:
 		#self._Sequencer.getNode('buffers_index').write(0x0)
 		self._hw.getNode("Control").getNode('testbeam_clock').write(clkset)
 		self._hw.getNode("Control").getNode('testbeam_mode').write(0x1)
+
+		self._hw.getNode("Control").getNode("beam_on").write(0x1)
+		self._hw.getNode("Control").getNode("shutter_delay").write(phase)
+
 		self._hw.dispatch()
 
 			

@@ -42,7 +42,7 @@ help	=	'mpa to configure (0 for all)')
 
 
 parser.add_option('-c', '--charge', metavar='F', type='int', action='store',
-default	=	80,
+default	=	0,
 dest	=	'charge',
 help	=	'Charge for caldac')
 
@@ -60,7 +60,7 @@ help	=	'test beam clock')
 
 
 parser.add_option('-n', '--number', metavar='F', type='int', action='store',
-default	=	0xF,
+default	=	0x0,
 dest	=	'number',
 help	=	'number of calcstrobe pulses to send')
 
@@ -208,7 +208,9 @@ else:
 Endloop = False
 spillnumber = 0
 
-confdict = {'OM':[memmode]*6,'RT':[0]*6,'SCW':[0]*6,'SH2':[0]*6,'SH1':[0]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'PML':[1]*6,'ARL':[AR]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[1]*6,'ARR':[AR]*6,'CER':[CE]*6,'SP':[0]*6,'SR':[SR]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
+confdict = {'OM':[memmode]*6,'RT':[0]*6,'SCW':[0]*6,'SH2':[0]*6,'SH1':[0]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'PML':[1]*6,'ARL':[AR]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[1]*6,'ARR':[AR]*6,'CER':[CE]*6,'SP':[1]*6,'SR':[SR]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
+#confdict = {'OM':[memmode]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'ARL':[AR]*6,'CEL':[CE]*6,'ARR':[AR]*6,'CER':[CE]*6,'SR':[SR]*6}
+#confdict = {'OM':[None]*6,'RT':[None]*6,'SCW':[None]*6,'SH2':[None]*6,'SH1':[None]*6,'THDAC':[None]*6,'CALDAC':[options.charge]*6,'PML':[None]*6,'ARL':[None]*6,'CEL':[None]*6,'CW':[None]*6,'PMR':[None]*6,'ARR':[None]*6,'CER':[None]*6,'SP':[None]*6,'SR':[None]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
 vararr = []
 
 if options.record=='True':
@@ -231,6 +233,7 @@ if options.record=='True':
 	tree_vars["SPILL"] = array('L',[0])
 	#tree_vars["TIMESTAMP"] = array('L',[0])
 	if options.setting == 'testbeam':
+
 		tree_vars["TRIG_COUNTS_SHUTTER"] = array('L',[0])
 		tree_vars["TRIG_COUNTS_TOTAL_SHUTTER"] = array('L',[0])
 		tree_vars["TRIG_COUNTS_TOTAL"] = array('L',[0])
@@ -461,12 +464,12 @@ if options.setting == 'manual':
 
 
 
-		for tv in tree_vars.keys():
-			if 'SR_UN_MPA' in tv:
-				continue 
-			for i in range(0,len(ev[tv])):
-				tree_vars[tv][i] = ev[tv][i]
-			tree.Fill()
+		#for tv in tree_vars.keys():
+		#	if 'SR_UN_MPA' in tv:
+		#		continue 
+		#	for i in range(0,len(ev[tv])):
+		#		tree_vars[tv][i] = ev[tv][i]
+		#	tree.Fill()
 	    F.Write()
 	    F.Close()
 
@@ -856,30 +859,35 @@ if options.setting == 'stripinput':
 
 
 if options.setting == 'testbeam' or options.setting == 'default':
+
+
+
+
 		sys.stdout = saveout
 		print "Starting DAQ loop.  Press Enter to quit"
 		#raw_input("...")
 		sys.stdout = Outf1
 
-
 		config = mapsa.config(Config=1,string='calibrated')
 		config.upload()
 
+
 		config.modifyfull(confdict)  
-
-
 
 	
 		if options.setting == 'testbeam':
 			polltime = 5000
 			a._hw.getNode("Shutter").getNode("time").write(options.shutterdur)
 			a._hw.dispatch()
-			mapsa.daq().Testbeam_init(clock=options.testclock ,calib=0x0)
+			mapsa.daq().Testbeam_init(clock=options.testclock ,calib=0x0,phase=options.phase)
 			mapsa.daq().header_init()
 		if options.setting == 'default':
 			polltime = 200
 			mapsa.daq().Sequencer_init(0x1,sdur,mem=1)
 			mapsa.daq().header_init()
+
+
+
 
 
 
@@ -903,10 +911,8 @@ if options.setting == 'testbeam' or options.setting == 'default':
 		numloops=0
 
 	  	poll =  0
-		a._hw.getNode("Control").getNode("shutter_delay").write(options.phase)
-		a._hw.dispatch()
-		a._hw.getNode("Control").getNode("beam_on").write(0x1)
-		a._hw.dispatch()
+
+
 
 		while Endrun == False:
 		    Endspill = False
@@ -957,7 +963,8 @@ if options.setting == 'testbeam' or options.setting == 'default':
 				cur = time.time()
 				if Startspill==True:
 					print "Waiting for spill for " +str(cur-start)+ " seconds"
-				if Startspill==False:
+				#if Startspill==False:
+				if False:#Startspill==False:
 					if cur-start>3.:
 						print "Spill ended"
 						Endspill == True
@@ -995,8 +1002,11 @@ if options.setting == 'testbeam' or options.setting == 'default':
 					cntspershutter+=sum(pix[i])
 					sys.stdout = saveout
 					#marray.append(mpa[i].daq().read_memory(mem[i],memmode))
+					#print pix[i]
 					marray.append(mem[i])
 					sys.stdout = Outf1
+				
+
 
 				if cntspershutter != 0 or options.setting == 'testbeam':
 					print "Reading buffer: " + str(ibuffer)
@@ -1168,10 +1178,13 @@ if options.setting == 'testbeam' or options.setting == 'default':
 				for i in range(0,len(ev[tv])):
 					tree_vars[tv][i] = ev[tv][i]
 				tree.Fill()
-
+		print "Writing beam off"
 		a._hw.getNode("Control").getNode("beam_on").write(0x0)
 		a._hw.dispatch()
-
+		print "Final trigger count"
+		final_triggers = a._hw.getNode("Control").getNode('total_triggers').read()
+		a._hw.dispatch()
+		print final_triggers
 	        F.Write()
 	        F.Close()
 

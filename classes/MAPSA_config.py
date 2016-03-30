@@ -69,8 +69,6 @@ class MAPSA_config:
 	def upload(self,show = 0):
 		for conf in self._confs:
 			conf.upload(show=0,Config=self._Config)
-
-
 	def modifyperiphery(self,what, value):
 
 		impa=0
@@ -124,6 +122,7 @@ class MAPSA_config:
 					#	self.modifypixel(x,key,[0,1,0,0,0,0])
 					#else:
 						self.modifypixel(x,key,whichs[key])
+		self.upload()
 		self.write()
 
 

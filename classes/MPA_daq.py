@@ -87,10 +87,16 @@ class MPA_daq:
 				
 			shift1 = int(0)
 			shift2 = int(16)
-	
+
 	
 			pix[2*x]  = int((counter_data[x] >> shift1) & 0xffff)
 			pix[2*x+1]= int((counter_data[x] >> shift2) & 0xffff)
+			#if (pix[2*x]>0 or pix[2*x+1]>0) and x>0:
+			#	print x
+			#	print binary(int(counter_data[x]))
+			#	print binary(pix[2*x])
+			#	print binary(pix[2*x+1])
+			#	print 
 
 		if Fast:
 			return pix,memory_data
