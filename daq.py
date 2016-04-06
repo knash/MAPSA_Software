@@ -469,7 +469,7 @@ if options.setting == 'manual':
 		#		continue 
 		#	for i in range(0,len(ev[tv])):
 		#		tree_vars[tv][i] = ev[tv][i]
-		#	tree.Fill()
+		#tree.Fill()
 	    F.Write()
 	    F.Close()
 
@@ -1177,7 +1177,7 @@ if options.setting == 'testbeam' or options.setting == 'default':
 					continue 
 				for i in range(0,len(ev[tv])):
 					tree_vars[tv][i] = ev[tv][i]
-				tree.Fill()
+			tree.Fill()
 		print "Writing beam off"
 		a._hw.getNode("Control").getNode("beam_on").write(0x0)
 		a._hw.dispatch()
