@@ -474,6 +474,7 @@ if options.setting == 'manual':
 	    F.Close()
 
 if options.setting == 'strip':
+		####NOTE-THIS IS READING BACK STRIP EMULATOR MODE 
 		sys.stdout = saveout
 		print "Starting DAQ loop.  Press Enter to quit"
 		#raw_input("...")
@@ -516,7 +517,11 @@ if options.setting == 'strip':
 		read1 = a._hw.getNode("Strip").getNode("enable").read()
 		a._hw.dispatch()
 		numloops=0
-
+		#confdict = {'OM':[memmode]*6,'RT':[0]*6,'SCW':[0]*6,'SH2':[0]*6,'SH1':[0]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'PML':[1,1,1,1,1,1],'ARL':[AR]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[1,1,1,1,1,1],'ARR':[AR]*6,'CER':[CE]*6,'SP':[0]*6,'SR':[SR]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
+			
+		config.modifyfull(confdict)  
+		config.upload()
+		a._hw.dispatch()
 		while True:
 			if options.loops!=-1:
 				if numloops>=options.loops:
@@ -534,15 +539,16 @@ if options.setting == 'strip':
 
 
 
-			confdict = {'OM':[memmode]*6,'RT':[0]*6,'SCW':[0]*6,'SH2':[0]*6,'SH1':[0]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'PML':[0,0,0,0,0,0],'ARL':[AR]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[0,0,0,0,0,0],'ARR':[AR]*6,'CER':[CE]*6,'SP':[0]*6,'SR':[SR]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
-			config.modifyfull(confdict)  
-			config.upload()
-			a._hw.dispatch()
-			confdict = {'OM':[memmode]*6,'RT':[0]*6,'SCW':[0]*6,'SH2':[0]*6,'SH1':[0]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'PML':[1,0,0,0,0,0],'ARL':[AR]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[0,0,0,0,0,0],'ARR':[AR]*6,'CER':[CE]*6,'SP':[0]*6,'SR':[SR]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
+			#confdict = {'OM':[memmode]*6,'RT':[0]*6,'SCW':[0]*6,'SH2':[0]*6,'SH1':[0]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'PML':[0,0,0,0,0,0],'ARL':[AR]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[0,0,0,0,0,0],'ARR':[AR]*6,'CER':[CE]*6,'SP':[0]*6,'SR':[SR]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
+			#config.modifyfull(confdict)  
+			#config.upload()
+			#a._hw.dispatch()
+			#confdict = {'OM':[memmode]*6,'RT':[0]*6,'SCW':[0]*6,'SH2':[0]*6,'SH1':[0]*6,'THDAC':thdac,'CALDAC':[options.charge]*6,'PML':[1,1,1,1,1,1],'ARL':[AR]*6,'CEL':[CE]*6,'CW':[0]*6,'PMR':[1,1,1,1,1,1],'ARR':[AR]*6,'CER':[CE]*6,'SP':[0]*6,'SR':[SR]*6,'TRIMDACL':[None]*6,'TRIMDACR':[None]*6}
 			
-			config.modifyfull(confdict,pixels=[numloops,numloops+1])  
-			config.upload()
-			a._hw.dispatch()
+			#config.modifyfull(confdict,pixels=[numloops,numloops+1])  
+			#config.modifyfull(confdict)  
+			#config.upload()
+			#a._hw.dispatch()
 
 
 			stripread = a._hw.getNode("Strip").getNode("enable").read()
@@ -706,6 +712,7 @@ if options.setting == 'strip':
 
 
 if options.setting == 'stripinput':
+		####NOTE-THIS IS SENDING FAKE STRIPS
 		sys.stdout = saveout
 		print "Starting DAQ loop.  Press Enter to quit"
 		#raw_input("...")
@@ -739,8 +746,9 @@ if options.setting == 'stripinput':
 		while True:
 			#print sphase
 			sphase+=1
-			if sphase>375:
+			if sphase>279:
 				sphase=0
+			sphase=80
     			a._hw.getNode("Control").getNode("strip_phase").write(sphase)
 			a._hw.dispatch()
 			print sphase
@@ -801,7 +809,7 @@ if options.setting == 'stripinput':
 			a._hw.dispatch()
 			mapsa.daq().Sequencer_init(0x0,sdur,mem=1)
 			pix,mem = mapsa.daq().read_data(1)
-			print 'reading counts'
+			#print 'reading counts'
 			parray = []
 			marray = []
 			#print mem
@@ -813,7 +821,7 @@ if options.setting == 'stripinput':
 
 					marray.append(mpa[i].daq().read_memory(mem[i],memmode))
 
-			print marray
+			#print marray
 
 			for i in range(0,6):
 
@@ -839,8 +847,8 @@ if options.setting == 'stripinput':
 						print m
 						breakout=True
 
-			if breakout:
-				break
+			#if breakout:
+			#	break
 			#a._hw.getNode("Strip").getNode("buffer_out").getNode("MPA1").write(0xFFFF)
 			#a._hw.getNode("Strip").getNode("buffer_out").getNode("MPA2").write(0xFFFF)
 			#a._hw.getNode("Strip").getNode("buffer_out").getNode("MPA3").write(0xFFFF)
