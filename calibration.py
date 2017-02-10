@@ -96,7 +96,7 @@ if options.setting=='calibration':
 	CE=1
 else:
 	CE=0
-SP=0
+SP=1
 
 nshut = 1
 
